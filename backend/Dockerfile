@@ -24,8 +24,19 @@ RUN apt-get update && apt-get install -y \
         zip \
         bcmath \
         intl \
+    && mkdir -p /var/run /var/log/php \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN echo "listen = /var/run/php-fpm.sock" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "listen.owner = www-data" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "listen.group = www-data" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "pm = dynamic" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "pm.max_children = 50" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "pm.start_servers = 4" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "pm.min_spare_servers = 2" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "pm.max_spare_servers = 8" >> /usr/local/etc/php-fpm.d/zz-www.conf
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
