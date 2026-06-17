@@ -31,7 +31,6 @@ steps:
       - --timeout=300
       - --set-env-vars=^---^APP_ENV=production---APP_DEBUG=false---APP_URL=https://anteconnect.duckdns.org---DB_CONNECTION=pgsql---DB_HOST=/cloudsql/$_CLOUD_SQL_INSTANCE---DB_PORT=5432---DB_DATABASE=anteconect---DB_USERNAME=postgres---SANCTUM_STATEFUL_DOMAINS=anteconnect.duckdns.org,consumer-ten.vercel.app,admin-tau-two-97.vercel.app,localhost---SESSION_DRIVER=file---CACHE_DRIVER=file---FILESYSTEM_DISK=gcs---FILESYSTEM_PUBLIC_DRIVER=gcs---GOOGLE_CLOUD_STORAGE_BUCKET=$_STORAGE_BUCKET---QUEUE_CONNECTION=database---LOG_CHANNEL=stack---LOG_LEVEL=error
       - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest,GOOGLE_CLOUD_PROJECT_ID=GOOGLE_CLOUD_PROJECT_ID:latest
-      - --add-cloudsql-instances=$_CLOUD_SQL_INSTANCE
       - --service-account=$_SERVICE_ACCOUNT
       - --set-cloud-sql-instances=$_CLOUD_SQL_INSTANCE
       - --execution-environment=gen2
@@ -53,9 +52,9 @@ substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
   _SERVICE_NAME: anteco-connect-api
   _DEPLOY_REGION: asia-southeast1
-  _CLOUD_SQL_INSTANCE: your-project:asia-southeast1:anteconect-db
+  _CLOUD_SQL_INSTANCE: antecoconnect:asia-southeast1:anteconect-db
   _STORAGE_BUCKET: anteconect-uploads
-  _SERVICE_ACCOUNT: your-service-account@your-project.iam.gserviceaccount.com
+  _SERVICE_ACCOUNT: anteco-connect-sa@antecoconnect.iam.gserviceaccount.com
   _DUCKDNS_TOKEN: 3abe99b5-b9ac-4293-9eff-c44e649bc62e
 
 options:
