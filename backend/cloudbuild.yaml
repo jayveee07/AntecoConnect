@@ -40,12 +40,12 @@ steps:
     args:
       - -c
       - |
-        echo "Updating DuckDNS with Cloud Run IP..."
-        RUN_URL=$(gcloud run services describe $_SERVICE_NAME --region=$_DEPLOY_REGION --format='value(status.url)')
-        HOSTNAME=$$(echo "$$RUN_URL" | sed 's|https://||' | sed 's|/||')
-        IP=$$(dig +short "$$HOSTNAME" | tail -n1)
-        echo "Resolved $$HOSTNAME -> $$IP"
-        curl -s "https://duckdns.org/update?domains=anteconnect&token=$$_DUCKDNS_TOKEN&ip=$$IP"
+        echo "Updating DuckDNS..."
+        RUN_URL=$$(gcloud run services describe $_SERVICE_NAME --region=$_DEPLOY_REGION --format='value(status.url)')
+        HOST=$$(echo "$$RUN_URL" | sed 's|https://||' | sed 's|/||')
+        IP=$$(dig +short "$$HOST" | tail -n1)
+        echo "$$HOST -> $$IP"
+        curl -s "https://duckdns.org/update?domains=anteconnect&token=$_DUCKDNS_TOKEN&ip=$$IP"
         echo ""
 
 substitutions:
