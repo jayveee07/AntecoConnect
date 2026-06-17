@@ -16,6 +16,7 @@ class CorsMiddleware
         'https://consumer.vercel.app',
         'https://admin-tau-two-97.vercel.app',
         'https://admin.vercel.app',
+        'https://anteconnect.duckdns.org',
     ];
 
     public function handle(Request $request, Closure $next): Response

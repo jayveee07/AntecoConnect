@@ -24,6 +24,9 @@ storage/framework/cache/data/
 storage/logs/*.log
 storage/app/*firebase*.json
 storage/app/*firebase-adminsdk*.json
+backend/storage/app/*firebase*.json
+backend/storage/app/*firebase-adminsdk*.json
+backend/storage/app/*credential*
 
 # Flutter
 *.iml

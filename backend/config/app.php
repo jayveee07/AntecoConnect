@@ -4,7 +4,7 @@ return [
     'name' => env('APP_NAME', 'ANTECOConnect'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
-    'url' => env('APP_URL', 'https://api.anteconect.com'),
+    'url' => env('APP_URL', 'https://anteconnect.duckdns.org'),
     'timezone' => 'Asia/Manila',
     'locale' => 'en',
     'fallback_locale' => 'en',

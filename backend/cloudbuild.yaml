@@ -29,7 +29,7 @@ steps:
       - --max-instances=10
       - --concurrency=80
       - --timeout=300
-      - --set-env-vars=^---^APP_ENV=production---APP_DEBUG=false---APP_URL=https://api.anteconect.com---DB_CONNECTION=pgsql---DB_HOST=/cloudsql/$_CLOUD_SQL_INSTANCE---DB_PORT=5432---DB_DATABASE=anteconect---DB_USERNAME=postgres---SANCTUM_STATEFUL_DOMAINS=consumer-ten.vercel.app,admin-tau-two-97.vercel.app,localhost---SESSION_DRIVER=file---CACHE_DRIVER=file---FILESYSTEM_DISK=gcs---FILESYSTEM_PUBLIC_DRIVER=gcs---GOOGLE_CLOUD_STORAGE_BUCKET=$_STORAGE_BUCKET---QUEUE_CONNECTION=database---LOG_CHANNEL=stack---LOG_LEVEL=error
+      - --set-env-vars=^---^APP_ENV=production---APP_DEBUG=false---APP_URL=https://anteconnect.duckdns.org---DB_CONNECTION=pgsql---DB_HOST=/cloudsql/$_CLOUD_SQL_INSTANCE---DB_PORT=5432---DB_DATABASE=anteconect---DB_USERNAME=postgres---SANCTUM_STATEFUL_DOMAINS=anteconnect.duckdns.org,consumer-ten.vercel.app,admin-tau-two-97.vercel.app,localhost---SESSION_DRIVER=file---CACHE_DRIVER=file---FILESYSTEM_DISK=gcs---FILESYSTEM_PUBLIC_DRIVER=gcs---GOOGLE_CLOUD_STORAGE_BUCKET=$_STORAGE_BUCKET---QUEUE_CONNECTION=database---LOG_CHANNEL=stack---LOG_LEVEL=error
       - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest,GOOGLE_CLOUD_PROJECT_ID=GOOGLE_CLOUD_PROJECT_ID:latest
       - --add-cloudsql-instances=$_CLOUD_SQL_INSTANCE
       - --service-account=$_SERVICE_ACCOUNT
