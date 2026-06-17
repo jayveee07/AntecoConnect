@@ -1,0 +1,47 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - -f
+      - Dockerfile
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args:
+      - run
+      - deploy
+      - $_SERVICE_NAME
+      - --image=$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - --region=$_DEPLOY_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+      - --cpu=1
+      - --memory=512Mi
+      - --min-instances=0
+      - --max-instances=10
+      - --concurrency=80
+      - --timeout=300
+      - --set-env-vars=APP_ENV=production,APP_DEBUG=false,APP_URL=https://api.anteconect.com,DB_CONNECTION=pgsql,DB_HOST=127.0.0.1,DB_PORT=5432,DB_DATABASE=anteconect,DB_USERNAME=postgres,SANCTUM_STATEFUL_DOMAINS=consumer-ten.vercel.app,admin-tau-two-97.vercel.app
+      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
+      - --add-cloudsql-instances=$_CLOUD_SQL_INSTANCE
+      - --service-account=$_SERVICE_ACCOUNT
+
+substitutions:
+  _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
+  _SERVICE_NAME: anteco-connect-api
+  _DEPLOY_REGION: asia-southeast1
+  _CLOUD_SQL_INSTANCE: your-project:asia-southeast1:anteconect-db
+  _SERVICE_ACCOUNT: your-service-account@your-project.iam.gserviceaccount.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1200s
