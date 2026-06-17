@@ -1,8 +1,9 @@
 import React from 'react';
-import { Users, Power, AlertTriangle, CreditCard, TrendingUp, Receipt, ClipboardList, Zap, ArrowUp, ArrowDown } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
+import { Users, Power, AlertTriangle, CreditCard, Receipt, ClipboardList, Zap, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { adminDashboardService } from '../services';
 
-const revenueData = [
+const defaultRevenue = [
   { month: 'Jan', revenue: 1250000, collection: 1150000 },
   { month: 'Feb', revenue: 1320000, collection: 1200000 },
   { month: 'Mar', revenue: 1180000, collection: 1050000 },
@@ -11,7 +12,7 @@ const revenueData = [
   { month: 'Jun', revenue: 1520000, collection: 1450000 },
 ];
 
-const outageData = [
+const defaultOutages = [
   { month: 'Jan', outages: 12, resolved: 10 },
   { month: 'Feb', outages: 15, resolved: 13 },
   { month: 'Mar', outages: 8, resolved: 7 },
@@ -21,6 +22,57 @@ const outageData = [
 ];
 
 export default function Dashboard() {
+  const [kpis, setKpis] = React.useState([
+    { icon: Users, label: 'Total Consumers', value: '45,892', change: '+2.4%', color: 'blue' },
+    { icon: CreditCard, label: 'Monthly Revenue', value: '₱1.52M', change: '+9.8%', color: 'green' },
+    { icon: AlertTriangle, label: 'Active Outages', value: '3', change: '-25%', color: 'red' },
+    { icon: ClipboardList, label: 'Pending Work Orders', value: '12', change: '+2', color: 'orange' },
+  ]);
+  const [revenueData, setRevenueData] = React.useState(defaultRevenue);
+  const [outageData, setOutageData] = React.useState(defaultOutages);
+  const [collectionRate, setCollectionRate] = React.useState('94.2%');
+  const [stats, setStats] = React.useState([
+    { icon: Users, label: 'Active Connections', value: '42,100', sub: '91.7% of total' },
+    { icon: Power, label: 'Inactive Accounts', value: '3,792', sub: '8.3% of total' },
+    { icon: Receipt, label: 'Pending Applications', value: '28', sub: '+5 this week' },
+    { icon: Zap, label: 'Energy Sales (MWh)', value: '18,420', sub: 'This month' },
+  ]);
+  const [activity, setActivity] = React.useState([
+    { action: 'Payment received', detail: '₱2,847.50 from Juan Dela Cruz', time: '5 min ago', type: 'payment' },
+    { action: 'Outage reported', detail: 'Power outage in San Roque, San Juan', time: '15 min ago', type: 'outage' },
+    { action: 'New connection approved', detail: 'Maria Santos - Barangay 3', time: '1 hour ago', type: 'service' },
+    { action: 'Work order completed', detail: 'Meter replacement #WO-2024-089', time: '2 hours ago', type: 'work' },
+    { action: 'Bill generated', detail: 'June 2024 billing cycle', time: '3 hours ago', type: 'billing' },
+  ]);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsRes, chartRes, activityRes] = await Promise.allSettled([
+          adminDashboardService.getStats(),
+          adminDashboardService.getChartData(),
+          adminDashboardService.getRecentActivity(),
+        ]);
+
+        if (statsRes.status === 'fulfilled') {
+          const d = statsRes.value.data;
+          setKpis(d.kpis || kpis);
+          setStats(d.stats || stats);
+        }
+        if (chartRes.status === 'fulfilled') {
+          const d = chartRes.value.data;
+          if (d.revenue) setRevenueData(d.revenue);
+          if (d.outages) setOutageData(d.outages);
+          if (d.collectionRate) setCollectionRate(d.collectionRate);
+        }
+        if (activityRes.status === 'fulfilled') {
+          setActivity(activityRes.value.data);
+        }
+      } catch {}
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -30,24 +82,21 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400">Last updated: June 17, 2024 10:30 AM</span>
-          <button className="btn-primary text-sm">Refresh Data</button>
+          <button className="btn-primary text-sm" onClick={() => window.location.reload()}>Refresh Data</button>
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={Users} label="Total Consumers" value="45,892" change="+2.4%" color="blue" />
-        <KPICard icon={CreditCard} label="Monthly Revenue" value="₱1.52M" change="+9.8%" color="green" />
-        <KPICard icon={AlertTriangle} label="Active Outages" value="3" change="-25%" color="red" />
-        <KPICard icon={ClipboardList} label="Pending Work Orders" value="12" change="+2" color="orange" />
+        {kpis.map((kpi, i) => (
+          <KPICard key={i} icon={kpi.icon} label={kpi.label} value={kpi.value} change={kpi.change} color={kpi.color} />
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">Revenue & Collection Trend</h3>
-            <span className="badge-success">Collection Rate: 94.2%</span>
+            <span className="badge-success">Collection Rate: {collectionRate}</span>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={revenueData}>
@@ -55,13 +104,12 @@ export default function Dashboard() {
               <XAxis dataKey="month" stroke="#9CA3AF" />
               <YAxis stroke="#9CA3AF" />
               <Tooltip />
-              <Bar dataKey="revenue" fill="#0057B8" radius={[4, 4, 0, 0]} name="Revenue" />
-              <Bar dataKey="collection" fill="#FFC107" radius={[4, 4, 0, 0]} name="Collection" />
+              <Bar dataKey="revenue" fill="#FF6B00" radius={[4, 4, 0, 0]} name="Revenue" />
+              <Bar dataKey="collection" fill="#10B981" radius={[4, 4, 0, 0]} name="Collection" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Outage Stats */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">Outage Statistics</h3>
@@ -86,25 +134,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatBox icon={Users} label="Active Connections" value="42,100" sub="91.7% of total" />
-        <StatBox icon={Power} label="Inactive Accounts" value="3,792" sub="8.3% of total" />
-        <StatBox icon={Receipt} label="Pending Applications" value="28" sub="+5 this week" />
-        <StatBox icon={Zap} label="Energy Sales (MWh)" value="18,420" sub="This month" />
+        {stats.map((s, i) => (
+          <StatBox key={i} icon={s.icon} label={s.label} value={s.value} sub={s.sub} />
+        ))}
       </div>
 
-      {/* Recent Activity */}
       <div className="card">
         <h3 className="font-semibold text-lg mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {[
-            { action: 'Payment received', detail: '₱2,847.50 from Juan Dela Cruz', time: '5 min ago', type: 'payment' },
-            { action: 'Outage reported', detail: 'Power outage in San Roque, San Juan', time: '15 min ago', type: 'outage' },
-            { action: 'New connection approved', detail: 'Maria Santos - Barangay 3', time: '1 hour ago', type: 'service' },
-            { action: 'Work order completed', detail: 'Meter replacement #WO-2024-089', time: '2 hours ago', type: 'work' },
-            { action: 'Bill generated', detail: 'June 2024 billing cycle', time: '3 hours ago', type: 'billing' },
-          ].map((item, i) => (
+          {activity.map((item, i) => (
             <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-700/50">
               <div className="flex items-center gap-3">
                 <div className={`w-2 h-2 rounded-full ${

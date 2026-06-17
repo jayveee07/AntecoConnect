@@ -5,8 +5,9 @@ import {
   Wallet, Clock, CheckCircle, Receipt,
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { dashboardService, billingService, outageService } from '../services';
 
-const consumptionData = [
+const defaultConsumption = [
   { month: 'Jan', kwh: 180 }, { month: 'Feb', kwh: 195 }, { month: 'Mar', kwh: 210 },
   { month: 'Apr', kwh: 240 }, { month: 'May', kwh: 280 }, { month: 'Jun', kwh: 260 },
 ];
@@ -28,6 +29,44 @@ function HeadphonesIcon(props) {
 }
 
 export default function Dashboard() {
+  const [stats, setStats] = React.useState({ usage: '260 kWh', rate: '₱8.94/kWh', outages: 3 });
+  const [currentBill, setCurrentBill] = React.useState({ period: 'June 2024', amount: '2,847.50', due: 'July 15, 2024', daysLeft: 10 });
+  const [consumptionData, setConsumption] = React.useState(defaultConsumption);
+  const [recentBills, setRecentBills] = React.useState([
+    { period: 'May 2024', kwh: 240, amount: '2,145.60', status: 'Paid' },
+    { period: 'April 2024', kwh: 220, amount: '1,967.80', status: 'Paid' },
+    { period: 'March 2024', kwh: 200, amount: '1,788.00', status: 'Paid' },
+  ]);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsRes, chartRes, billRes, recentRes] = await Promise.allSettled([
+          dashboardService.getStats(),
+          dashboardService.getConsumptionChart(),
+          billingService.getCurrentBill(),
+          dashboardService.getRecentBills(),
+        ]);
+
+        if (statsRes.status === 'fulfilled') {
+          const s = statsRes.value.data;
+          setStats({ usage: s.usage, rate: s.rate, outages: s.outages });
+        }
+        if (chartRes.status === 'fulfilled') {
+          setConsumption(chartRes.value.data);
+        }
+        if (billRes.status === 'fulfilled') {
+          const b = billRes.value.data;
+          setCurrentBill({ period: b.period, amount: b.amount, due: b.due_date, daysLeft: b.days_remaining });
+        }
+        if (recentRes.status === 'fulfilled') {
+          setRecentBills(recentRes.value.data);
+        }
+      } catch {}
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -41,13 +80,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Current Bill Card */}
       <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-primary-200 text-sm">Current Bill - June 2024</p>
-            <h2 className="text-4xl font-bold mt-2">₱2,847.50</h2>
-            <p className="text-primary-200 text-sm mt-1">Due: July 15, 2024 (10 days remaining)</p>
+            <p className="text-primary-200 text-sm">Current Bill - {currentBill.period}</p>
+            <h2 className="text-4xl font-bold mt-2">₱{currentBill.amount}</h2>
+            <p className="text-primary-200 text-sm mt-1">Due: {currentBill.due} ({currentBill.daysLeft} days remaining)</p>
           </div>
           <div className="bg-white/20 rounded-xl p-3 flex items-center justify-center">
             <img src="/anteco.png" alt="ANTECO" className="w-8 h-8 brightness-0 invert" />
@@ -63,7 +101,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {quickActions.map((action, i) => (
           <Link key={i} to={action.path}
@@ -77,14 +114,13 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat-card">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
-            <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
+            <Zap className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold">260 kWh</p>
+            <p className="text-2xl font-bold">{stats.usage}</p>
             <p className="text-sm text-gray-500">Current Month Usage</p>
           </div>
         </div>
@@ -93,7 +129,7 @@ export default function Dashboard() {
             <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold">₱8.94/kWh</p>
+            <p className="text-2xl font-bold">{stats.rate}</p>
             <p className="text-sm text-gray-500">Average Rate</p>
           </div>
         </div>
@@ -102,13 +138,12 @@ export default function Dashboard() {
             <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold">3</p>
+            <p className="text-2xl font-bold">{stats.outages}</p>
             <p className="text-sm text-gray-500">Active Outages</p>
           </div>
         </div>
       </div>
 
-      {/* Consumption Chart */}
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-semibold text-lg">Energy Consumption Trend</h3>
@@ -120,38 +155,37 @@ export default function Dashboard() {
           <AreaChart data={consumptionData}>
             <defs>
               <linearGradient id="colorKwh" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0057B8" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#0057B8" stopOpacity={0} />
+                <stop offset="5%" stopColor="#FF6B00" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#FF6B00" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
             <XAxis dataKey="month" stroke="#9e9e9e" />
             <YAxis stroke="#9e9e9e" />
             <Tooltip />
-            <Area type="monotone" dataKey="kwh" stroke="#0057B8" fill="url(#colorKwh)" strokeWidth={3} />
+            <Area type="monotone" dataKey="kwh" stroke="#FF6B00" fill="url(#colorKwh)" strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Recent Bills */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg">Recent Bills</h3>
           <Link to="/billing" className="text-primary-500 text-sm hover:underline">View All</Link>
         </div>
         <div className="space-y-3">
-          {['May 2024', 'April 2024', 'March 2024'].map((period, i) => (
+          {recentBills.map((bill, i) => (
             <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center gap-3">
-                <CheckCircle className={`w-5 h-5 ${i === 0 ? 'text-green-500' : 'text-green-500'}`} />
+                <CheckCircle className="w-5 h-5 text-green-500" />
                 <div>
-                  <p className="font-medium">{period}</p>
-                  <p className="text-sm text-gray-500">240 kWh consumed</p>
+                  <p className="font-medium">{bill.period}</p>
+                  <p className="text-sm text-gray-500">{bill.kwh} kWh consumed</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold">₱2,145.60</p>
-                <span className="badge-success">Paid</span>
+                <p className="font-semibold">₱{bill.amount}</p>
+                <span className="badge-success">{bill.status}</span>
               </div>
             </div>
           ))}

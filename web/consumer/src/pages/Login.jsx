@@ -1,7 +1,28 @@
 import React from 'react';
-
+import { authService } from '../services';
 
 export default function Login({ onLogin }) {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const { data } = await authService.login({ email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      onLogin();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center p-8">
@@ -12,14 +33,15 @@ export default function Login({ onLogin }) {
             <p className="text-gray-500 dark:text-gray-400 mt-2">Sign in to your ANTECO account</p>
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); onLogin(); }} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && <div className="bg-red-500/10 border border-red-500 text-red-500 rounded-lg p-3 text-sm">{error}</div>}
             <div>
               <label className="block text-sm font-medium mb-2">Email Address</label>
-              <input type="email" className="input-field" placeholder="Enter your email" required />
+              <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Password</label>
-              <input type="password" className="input-field" placeholder="Enter your password" required />
+              <input type="password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
             </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
@@ -28,7 +50,9 @@ export default function Login({ onLogin }) {
               </label>
               <button type="button" className="text-sm text-primary-500 hover:underline">Forgot Password?</button>
             </div>
-            <button type="submit" className="btn-primary w-full">Sign In</button>
+            <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
           </form>
 
           <p className="text-center text-sm text-gray-500">

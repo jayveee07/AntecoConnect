@@ -1,0 +1,13 @@
+export { authService } from './auth';
+export { adminDashboardService } from './dashboard';
+export { consumerService } from './consumers';
+export { adminBillingService } from './billing';
+export { userService } from './users';
+export { adminPaymentService } from './payments';
+export { adminOutageService } from './outages';
+export { workOrderService } from './workOrders';
+export { adminServiceRequestService } from './serviceRequests';
+export { meterReadingService } from './meterReading';
+export { announcementService } from './announcements';
+export { reportService } from './reports';
+export { gisService } from './gis';

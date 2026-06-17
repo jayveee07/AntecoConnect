@@ -22,7 +22,8 @@ backend/vendor/
 .env.*.local
 storage/framework/cache/data/
 storage/logs/*.log
-storage/app/firebase-credentials.json
+storage/app/*firebase*.json
+storage/app/*firebase-adminsdk*.json
 
 # Flutter
 *.iml
