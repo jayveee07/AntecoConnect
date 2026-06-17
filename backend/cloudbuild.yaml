@@ -3,7 +3,7 @@ steps:
     args:
       - build
       - -t
-      - $_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:latest
+      - $_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_SERVICE_NAME:latest
       - -f
       - Dockerfile
       - .
@@ -11,7 +11,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - $_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:latest
+      - $_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_SERVICE_NAME:latest
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -19,7 +19,7 @@ steps:
       - run
       - deploy
       - $_SERVICE_NAME
-      - --image=$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:latest
+      - --image=$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_SERVICE_NAME:latest
       - --region=$_DEPLOY_REGION
       - --platform=managed
       - --allow-unauthenticated
