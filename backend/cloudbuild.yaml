@@ -36,6 +36,19 @@ steps:
       - --set-cloud-sql-instances=$_CLOUD_SQL_INSTANCE
       - --execution-environment=gen2
 
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        echo "Updating DuckDNS with Cloud Run IP..."
+        RUN_URL=$(gcloud run services describe $_SERVICE_NAME --region=$_DEPLOY_REGION --format='value(status.url)')
+        HOSTNAME=$$(echo "$$RUN_URL" | sed 's|https://||' | sed 's|/||')
+        IP=$$(dig +short "$$HOSTNAME" | tail -n1)
+        echo "Resolved $$HOSTNAME -> $$IP"
+        curl -s "https://duckdns.org/update?domains=anteconnect&token=$$_DUCKDNS_TOKEN&ip=$$IP"
+        echo ""
+
 substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
   _SERVICE_NAME: anteco-connect-api
@@ -43,6 +56,7 @@ substitutions:
   _CLOUD_SQL_INSTANCE: your-project:asia-southeast1:anteconect-db
   _STORAGE_BUCKET: anteconect-uploads
   _SERVICE_ACCOUNT: your-service-account@your-project.iam.gserviceaccount.com
+  _DUCKDNS_TOKEN: 3abe99b5-b9ac-4293-9eff-c44e649bc62e
 
 options:
   logging: CLOUD_LOGGING_ONLY
