@@ -5,6 +5,7 @@
 .dockerignore
 .env
 .env.*
+!.env.gcp.example
 vendor/
 node_modules/
 storage/logs/*

@@ -32,7 +32,7 @@ steps:
       - --set-env-vars=^---^APP_ENV=production---APP_DEBUG=false---APP_URL=https://anteconnect.duckdns.org---DB_CONNECTION=pgsql---DB_HOST=/cloudsql/$_CLOUD_SQL_INSTANCE---DB_PORT=5432---DB_DATABASE=anteconect---DB_USERNAME=postgres---SANCTUM_STATEFUL_DOMAINS=anteconnect.duckdns.org,consumer-ten.vercel.app,admin-tau-two-97.vercel.app,localhost---SESSION_DRIVER=file---CACHE_DRIVER=file---FILESYSTEM_DISK=gcs---FILESYSTEM_PUBLIC_DRIVER=gcs---GOOGLE_CLOUD_STORAGE_BUCKET=$_STORAGE_BUCKET---QUEUE_CONNECTION=database---LOG_CHANNEL=stack---LOG_LEVEL=error
       - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest,GOOGLE_CLOUD_PROJECT_ID=GOOGLE_CLOUD_PROJECT_ID:latest
       - --service-account=$_SERVICE_ACCOUNT
-      - --set-cloud-sql-instances=$_CLOUD_SQL_INSTANCE
+      - --set-cloudsql-instances=$_CLOUD_SQL_INSTANCE
       - --execution-environment=gen2
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -40,13 +40,19 @@ steps:
     args:
       - -c
       - |
-        echo "Updating DuckDNS..."
+        echo "Setting DuckDNS CNAME to Cloud Run URL..."
         RUN_URL=$$(gcloud run services describe $_SERVICE_NAME --region=$_DEPLOY_REGION --format='value(status.url)')
         HOST=$$(echo "$$RUN_URL" | sed 's|https://||' | sed 's|/||')
-        IP=$$(dig +short "$$HOST" | tail -n1)
-        echo "$$HOST -> $$IP"
-        curl -s "https://duckdns.org/update?domains=anteconnect&token=$_DUCKDNS_TOKEN&ip=$$IP"
+        echo "Cloud Run URL: $$HOST"
+        curl -s "https://duckdns.org/update?domains=anteconnect&token=$_DUCKDNS_TOKEN&ip=$$HOST"
         echo ""
+        echo ""
+        echo "===== MANUAL STEP: Set up Cloud Run domain mapping ====="
+        echo "Run this command once to map anteconnect.duckdns.org:"
+        echo "  gcloud beta run domain-mappings create --service=\$$_SERVICE_NAME --domain=anteconnect.duckdns.org --region=\$$_DEPLOY_REGION"
+        echo ""
+        echo "Then add these DNS records in DuckDNS web UI (https://duckdns.org):"
+        echo "  CNAME: anteconnect -> ghs.googlehosted.com  (or the Cloud Run verification record)"
 
 substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev

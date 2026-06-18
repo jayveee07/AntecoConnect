@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
+    libcurl4-openssl-dev \
+    libicu-dev \
     unzip \
     curl \
     git \
@@ -31,7 +33,7 @@ RUN apt-get update && apt-get install -y \
 RUN echo "listen = /var/run/php-fpm.sock" >> /usr/local/etc/php-fpm.d/zz-www.conf \
     && echo "listen.owner = www-data" >> /usr/local/etc/php-fpm.d/zz-www.conf \
     && echo "listen.group = www-data" >> /usr/local/etc/php-fpm.d/zz-www.conf \
-    && echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/zz-www.conf \
+    && echo "listen.mode = 0666" >> /usr/local/etc/php-fpm.d/zz-www.conf \
     && echo "pm = dynamic" >> /usr/local/etc/php-fpm.d/zz-www.conf \
     && echo "pm.max_children = 50" >> /usr/local/etc/php-fpm.d/zz-www.conf \
     && echo "pm.start_servers = 4" >> /usr/local/etc/php-fpm.d/zz-www.conf \
@@ -45,12 +47,6 @@ WORKDIR /app
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-RUN php artisan optimize:clear \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan event:cache
 
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
