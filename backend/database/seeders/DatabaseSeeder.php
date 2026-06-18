@@ -33,8 +33,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
-
         // 1. Users
         $consumer1 = User::create([
             'first_name' => 'Juan', 'last_name' => 'Dela Cruz', 'email' => 'juan@example.com',
