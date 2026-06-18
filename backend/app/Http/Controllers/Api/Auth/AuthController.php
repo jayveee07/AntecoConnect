@@ -120,6 +120,8 @@ class AuthController extends Controller
                     'first_name' => $nameParts[0],
                     'last_name' => $nameParts[1] ?? '',
                     'email' => $email,
+                    'mobile_number' => 'GOOGLE-' . ($payload['sub'] ?? uniqid()),
+                    'profile_photo' => $payload['picture'] ?? null,
                     'password' => Hash::make(Str::random(32)),
                     'consumer_code' => 'ANT-' . strtoupper(uniqid()),
                     'is_verified' => true,
