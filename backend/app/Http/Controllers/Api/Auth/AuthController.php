@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -90,22 +89,22 @@ class AuthController extends Controller
             'firebase_token' => 'required|string',
         ]);
 
-        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
-            'id_token' => $validated['firebase_token'],
-        ]);
+        $payload = json_decode(base64_decode(explode('.', $validated['firebase_token'])[1] ?? ''), true);
 
-        if ($response->failed() || !$response->json('email')) {
+        if (!$payload || !isset($payload['email'])) {
             return response()->json(['message' => 'Invalid Firebase token.'], 401);
         }
 
-        $payload = $response->json();
         $email = $payload['email'];
+
+        $name = $payload['name'] ?? explode('@', $email)[0];
+        $nameParts = explode(' ', $name, 2);
 
         $user = User::firstOrCreate(
             ['email' => $email],
             [
-                'first_name' => $payload['given_name'] ?? explode('@', $email)[0],
-                'last_name' => $payload['family_name'] ?? '',
+                'first_name' => $nameParts[0],
+                'last_name' => $nameParts[1] ?? '',
                 'email' => $email,
                 'password' => Hash::make(Str::random(32)),
                 'consumer_code' => 'ANT-' . strtoupper(uniqid()),
