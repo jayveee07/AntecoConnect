@@ -66,6 +66,12 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token', ['*'])->plainTextToken;
 
+        try {
+            $roles = $user->getRoleNames();
+        } catch (\Throwable $e) {
+            $roles = [];
+        }
+
         return response()->json([
             'message' => 'Login successful.',
             'user' => [
@@ -77,7 +83,7 @@ class AuthController extends Controller
                 'mobile_number' => $user->mobile_number,
                 'profile_photo' => $user->profile_photo,
                 'is_verified' => $user->is_verified,
-                'roles' => $user->getRoleNames(),
+                'roles' => $roles,
             ],
             'token' => $token,
         ]);
@@ -116,6 +122,11 @@ class AuthController extends Controller
                     return response()->json(['message' => 'Account is deactivated.'], 403);
                 }
                 $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+                try {
+                    $roles = $user->getRoleNames();
+                } catch (\Throwable $e) {
+                    $roles = [];
+                }
                 return response()->json([
                     'message' => 'Login successful.',
                     'user' => [
@@ -127,7 +138,7 @@ class AuthController extends Controller
                         'mobile_number' => $user->mobile_number,
                         'profile_photo' => $user->profile_photo,
                         'is_verified' => $user->is_verified,
-                        'roles' => $user->getRoleNames(),
+                        'roles' => $roles,
                     ],
                     'token' => $token,
                 ]);
@@ -207,7 +218,21 @@ class AuthController extends Controller
             $user->email_verified_at = now();
             $user->save();
 
+            try {
+                if (class_exists(\Spatie\Permission\Models\Role::class) && \Spatie\Permission\Models\Role::where('name', 'consumer')->exists()) {
+                    $user->assignRole('consumer');
+                }
+            } catch (\Throwable $e) {
+                // roles table may not exist yet
+            }
+
             $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+
+            try {
+                $roles = $user->getRoleNames();
+            } catch (\Throwable $e) {
+                $roles = [];
+            }
 
             return response()->json([
                 'message' => 'Registration complete.',
@@ -220,7 +245,7 @@ class AuthController extends Controller
                     'mobile_number' => $user->mobile_number,
                     'profile_photo' => $user->profile_photo,
                     'is_verified' => $user->is_verified,
-                    'roles' => $user->getRoleNames(),
+                    'roles' => $roles,
                 ],
                 'token' => $token,
             ]);

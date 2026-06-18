@@ -5,6 +5,14 @@ import { authService } from '../services';
 
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
+const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
+  <div>
+    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
+    <input name={name} type={type || 'text'} className={input + (value === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+      value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
+  </div>
+);
+
 export default function Login({ onLogin, isDark, toggleTheme }) {
   const [mode, setMode] = React.useState('login');
   const [method, setMethod] = React.useState(null);
@@ -154,14 +162,6 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       {loading ? <Spinner /> : null}
       {children}
     </button>
-  );
-
-  const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
-    <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
-      <input name={name} type={type || 'text'} className={input + (error && !value ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
-        value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
-    </div>
   );
 
   const GoogleBtn = () => (
