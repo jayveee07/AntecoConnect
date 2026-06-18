@@ -79,7 +79,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       const result = await signInWithPopup(firebaseAuth, provider);
       const user = result.user;
       const idToken = await user.getIdToken();
-      const { data } = await authService.login({ firebase_token: idToken });
+      const { data } = await authService.firebaseLogin(idToken);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       onLogin();

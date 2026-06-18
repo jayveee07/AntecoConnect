@@ -7,7 +7,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -58,6 +60,59 @@ class AuthController extends Controller
                 'credentials' => ['The provided credentials are incorrect.'],
             ]);
         }
+
+        if (!$user->is_active) {
+            return response()->json(['message' => 'Account is deactivated.'], 403);
+        }
+
+        $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful.',
+            'user' => [
+                'id' => $user->id,
+                'consumer_code' => $user->consumer_code,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'mobile_number' => $user->mobile_number,
+                'profile_photo' => $user->profile_photo,
+                'is_verified' => $user->is_verified,
+                'roles' => $user->getRoleNames(),
+            ],
+            'token' => $token,
+        ]);
+    }
+
+    public function firebaseLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'firebase_token' => 'required|string',
+        ]);
+
+        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $validated['firebase_token'],
+        ]);
+
+        if ($response->failed() || !$response->json('email')) {
+            return response()->json(['message' => 'Invalid Firebase token.'], 401);
+        }
+
+        $payload = $response->json();
+        $email = $payload['email'];
+
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            [
+                'first_name' => $payload['given_name'] ?? explode('@', $email)[0],
+                'last_name' => $payload['family_name'] ?? '',
+                'email' => $email,
+                'password' => Hash::make(Str::random(32)),
+                'consumer_code' => 'ANT-' . strtoupper(uniqid()),
+                'is_verified' => true,
+                'email_verified_at' => now(),
+            ]
+        );
 
         if (!$user->is_active) {
             return response()->json(['message' => 'Account is deactivated.'], 403);

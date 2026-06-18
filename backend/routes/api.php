@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Admin\RateController;
 // Public Routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/firebase', [AuthController::class, 'firebaseLogin']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
