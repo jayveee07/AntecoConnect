@@ -13,7 +13,7 @@ php artisan route:cache || echo "WARN: route:cache failed"
 php artisan view:cache || echo "WARN: view:cache failed"
 
 php artisan migrate --force || echo "WARN: migrate failed, continuing..."
-php artisan db:seed --class=Database\\Seeders\\RoleSeeder --force || echo "WARN: seeder failed, continuing..."
+php artisan db:seed --class=Database\\Seeders\\DatabaseSeeder --force || echo "WARN: seeder failed, continuing..."
 
 echo "Starting supervisord..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
