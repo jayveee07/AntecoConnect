@@ -25,17 +25,6 @@ use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\Admin\RateController;
 
 // Public Routes
-Route::get('/auth/debug-db', function () {
-    $pw = env('DB_PASSWORD');
-    return response()->json([
-        'pw_length' => strlen($pw),
-        'pw_prefix' => substr($pw, 0, 4),
-        'pw_suffix' => substr($pw, -4),
-        'db_host' => env('DB_HOST'),
-        'db_user' => env('DB_USERNAME'),
-        'db_name' => env('DB_DATABASE'),
-    ]);
-});
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/firebase', [AuthController::class, 'firebaseLogin']);
