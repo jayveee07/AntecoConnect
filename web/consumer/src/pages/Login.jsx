@@ -86,7 +86,8 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       onLogin();
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Google sign-in failed. Please try again.');
+        const msg = err.response?.data?.message || err.message || 'Google sign-in failed.';
+        setError(msg);
       }
     } finally {
       setGoogleLoading(false);
