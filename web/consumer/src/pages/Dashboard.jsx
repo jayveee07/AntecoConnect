@@ -5,18 +5,11 @@ import {
   Wallet, Clock, CheckCircle, Receipt,
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { dashboardService, billingService, outageService } from '../services';
+import { dashboardService } from '../services';
 
-const defaultConsumption = [
+const defaultMonthly = [
   { month: 'Jan', kwh: 180 }, { month: 'Feb', kwh: 195 }, { month: 'Mar', kwh: 210 },
   { month: 'Apr', kwh: 240 }, { month: 'May', kwh: 280 }, { month: 'Jun', kwh: 260 },
-];
-
-const quickActions = [
-  { icon: Wallet, label: 'Pay Bill', path: '/payments', color: 'bg-green-500' },
-  { icon: AlertTriangle, label: 'Report Outage', path: '/outages', color: 'bg-red-500' },
-  { icon: Receipt, label: 'View Bills', path: '/billing', color: 'bg-blue-500' },
-  { icon: HeadphonesIcon, label: 'Contact Support', path: '/support', color: 'bg-purple-500' },
 ];
 
 function HeadphonesIcon(props) {
@@ -31,7 +24,7 @@ function HeadphonesIcon(props) {
 export default function Dashboard() {
   const [stats, setStats] = React.useState({ usage: '260 kWh', rate: '₱8.94/kWh', outages: 3 });
   const [currentBill, setCurrentBill] = React.useState({ period: 'June 2024', amount: '2,847.50', due: 'July 15, 2024', daysLeft: 10 });
-  const [consumptionData, setConsumption] = React.useState(defaultConsumption);
+  const [consumptionData, setConsumption] = React.useState(defaultMonthly);
   const [recentBills, setRecentBills] = React.useState([
     { period: 'May 2024', kwh: 240, amount: '2,145.60', status: 'Paid' },
     { period: 'April 2024', kwh: 220, amount: '1,967.80', status: 'Paid' },
@@ -41,42 +34,58 @@ export default function Dashboard() {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, chartRes, billRes, recentRes] = await Promise.allSettled([
-          dashboardService.getStats(),
-          dashboardService.getConsumptionChart(),
-          billingService.getCurrentBill(),
-          dashboardService.getRecentBills(),
-        ]);
+        const { data } = await dashboardService.getAll();
+        const d = data.data || data;
 
-        if (statsRes.status === 'fulfilled') {
-          const s = statsRes.value.data;
-          setStats({ usage: s.usage, rate: s.rate, outages: s.outages });
+        if (d.current_bill) {
+          setCurrentBill({
+            period: d.current_bill.billing_period,
+            amount: d.current_bill.total_amount_due?.toLocaleString() || d.current_bill.total_amount_due,
+            due: d.current_bill.due_date,
+            daysLeft: d.current_bill.days_until_due,
+          });
         }
-        if (chartRes.status === 'fulfilled') {
-          setConsumption(chartRes.value.data);
+
+        if (d.consumption?.monthly?.length) {
+          setConsumption(d.consumption.monthly.map((m) => ({
+            month: m.month || m.billing_period || '',
+            kwh: Number(m.consumption_kwh || m.kwh || 0),
+          })));
         }
-        if (billRes.status === 'fulfilled') {
-          const b = billRes.value.data;
-          setCurrentBill({ period: b.period, amount: b.amount, due: b.due_date, daysLeft: b.days_remaining });
+
+        if (d.recent_bills?.length) {
+          setRecentBills(d.recent_bills.map((b) => ({
+            period: b.billing_period || b.period,
+            kwh: b.kwh || b.consumption_kwh || 0,
+            amount: b.total_amount_due?.toLocaleString?.() || b.amount?.toLocaleString?.() || b.amount || b.total_amount_due,
+            status: b.status,
+          })));
         }
-        if (recentRes.status === 'fulfilled') {
-          setRecentBills(recentRes.value.data);
+
+        if (d.active_outages !== undefined) {
+          setStats((prev) => ({ ...prev, outages: d.active_outages }));
         }
       } catch {}
     };
     fetchData();
   }, []);
 
+  const quickActions = [
+    { icon: Wallet, label: 'Pay Bill', path: '/payments', color: 'bg-green-500' },
+    { icon: AlertTriangle, label: 'Report Outage', path: '/outages', color: 'bg-red-500' },
+    { icon: Receipt, label: 'View Bills', path: '/billing', color: 'bg-blue-500' },
+    { icon: HeadphonesIcon, label: 'Contact Support', path: '/support', color: 'bg-purple-500' },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400">Welcome back, Juan Dela Cruz</p>
+          <p className="text-gray-500 dark:text-gray-400">Welcome back</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="badge-info">Active</span>
-          <span className="text-sm text-gray-500">Account: ANT-2024-001</span>
         </div>
       </div>
 
