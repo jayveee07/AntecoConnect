@@ -89,29 +89,30 @@ class AuthController extends Controller
             'firebase_token' => 'required|string',
         ]);
 
-        $payload = json_decode(base64_decode(explode('.', $validated['firebase_token'])[1] ?? ''), true);
+        $parts = explode('.', $validated['firebase_token']);
+        $payload = json_decode(base64_decode(strtr($parts[1] ?? '', '-_', '+/')), true);
 
         if (!$payload || !isset($payload['email'])) {
             return response()->json(['message' => 'Invalid Firebase token.'], 401);
         }
 
         $email = $payload['email'];
-
         $name = $payload['name'] ?? explode('@', $email)[0];
         $nameParts = explode(' ', $name, 2);
 
-        $user = User::firstOrCreate(
-            ['email' => $email],
-            [
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            $user = User::create([
                 'first_name' => $nameParts[0],
                 'last_name' => $nameParts[1] ?? '',
                 'email' => $email,
                 'password' => Hash::make(Str::random(32)),
                 'consumer_code' => 'ANT-' . strtoupper(uniqid()),
                 'is_verified' => true,
-                'email_verified_at' => now(),
-            ]
-        );
+            ]);
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
 
         if (!$user->is_active) {
             return response()->json(['message' => 'Account is deactivated.'], 403);
