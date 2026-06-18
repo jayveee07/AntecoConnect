@@ -85,56 +85,73 @@ class AuthController extends Controller
 
     public function firebaseLogin(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'firebase_token' => 'required|string',
-        ]);
-
-        $parts = explode('.', $validated['firebase_token']);
-        $payload = json_decode(base64_decode(strtr($parts[1] ?? '', '-_', '+/')), true);
-
-        if (!$payload || !isset($payload['email'])) {
-            return response()->json(['message' => 'Invalid Firebase token.'], 401);
-        }
-
-        $email = $payload['email'];
-        $name = $payload['name'] ?? explode('@', $email)[0];
-        $nameParts = explode(' ', $name, 2);
-
-        $user = User::where('email', $email)->first();
-
-        if (!$user) {
-            $user = User::create([
-                'first_name' => $nameParts[0],
-                'last_name' => $nameParts[1] ?? '',
-                'email' => $email,
-                'password' => Hash::make(Str::random(32)),
-                'consumer_code' => 'ANT-' . strtoupper(uniqid()),
-                'is_verified' => true,
+        try {
+            $validated = $request->validate([
+                'firebase_token' => 'required|string',
             ]);
-            $user->forceFill(['email_verified_at' => now()])->save();
+
+            $token = $validated['firebase_token'];
+            $parts = explode('.', $token);
+
+            if (count($parts) !== 3) {
+                return response()->json(['message' => 'Invalid token format.'], 401);
+            }
+
+            $decoded = base64_decode(strtr($parts[1], '-_', '+/'), true);
+
+            if ($decoded === false) {
+                return response()->json(['message' => 'Invalid token encoding.'], 401);
+            }
+
+            $payload = json_decode($decoded, true);
+
+            if (!$payload || !isset($payload['email'])) {
+                return response()->json(['message' => 'Invalid token payload.'], 401);
+            }
+
+            $email = $payload['email'];
+            $name = $payload['name'] ?? explode('@', $email)[0];
+            $nameParts = explode(' ', $name, 2);
+
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'first_name' => $nameParts[0],
+                    'last_name' => $nameParts[1] ?? '',
+                    'email' => $email,
+                    'password' => Hash::make(Str::random(32)),
+                    'consumer_code' => 'ANT-' . strtoupper(uniqid()),
+                    'is_verified' => true,
+                ]);
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
+            if (!$user->is_active) {
+                return response()->json(['message' => 'Account is deactivated.'], 403);
+            }
+
+            $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login successful.',
+                'user' => [
+                    'id' => $user->id,
+                    'consumer_code' => $user->consumer_code,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'mobile_number' => $user->mobile_number,
+                    'profile_photo' => $user->profile_photo,
+                    'is_verified' => $user->is_verified,
+                    'roles' => $user->getRoleNames(),
+                ],
+                'token' => $token,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Firebase login failed: ' . $e->getMessage()], 500);
         }
-
-        if (!$user->is_active) {
-            return response()->json(['message' => 'Account is deactivated.'], 403);
-        }
-
-        $token = $user->createToken('auth-token', ['*'])->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful.',
-            'user' => [
-                'id' => $user->id,
-                'consumer_code' => $user->consumer_code,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'mobile_number' => $user->mobile_number,
-                'profile_photo' => $user->profile_photo,
-                'is_verified' => $user->is_verified,
-                'roles' => $user->getRoleNames(),
-            ],
-            'token' => $token,
-        ]);
     }
 
     public function logout(Request $request): JsonResponse
