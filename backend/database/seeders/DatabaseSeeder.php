@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Users
-        $consumer1 = User::firstOrCreate(
+        $consumer1 = User::updateOrCreate(
             ['email' => 'juan@example.com'],
             [
                 'first_name' => 'Juan', 'last_name' => 'Dela Cruz',
@@ -46,7 +46,7 @@ class DatabaseSeeder extends Seeder
         );
         if (!$consumer1->hasRole('consumer')) { $consumer1->assignRole('consumer'); }
 
-        $consumer2 = User::firstOrCreate(
+        $consumer2 = User::updateOrCreate(
             ['email' => 'maria@example.com'],
             [
                 'first_name' => 'Maria', 'last_name' => 'Santos',
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
         );
         if (!$consumer2->hasRole('consumer')) { $consumer2->assignRole('consumer'); }
 
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@anteco.com'],
             [
                 'first_name' => 'Admin', 'last_name' => 'User',
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
         );
         if (!$admin->hasRole('admin')) { $admin->assignRole('admin'); }
 
-        $tech = User::firstOrCreate(
+        $tech = User::updateOrCreate(
             ['email' => 'tech@anteco.com'],
             [
                 'first_name' => 'Pedro', 'last_name' => 'Tech',
