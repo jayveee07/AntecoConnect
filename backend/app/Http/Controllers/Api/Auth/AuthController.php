@@ -90,8 +90,7 @@ class AuthController extends Controller
                 'firebase_token' => 'required|string',
             ]);
 
-            $token = $validated['firebase_token'];
-            $parts = explode('.', $token);
+            $parts = explode('.', $validated['firebase_token']);
 
             if (count($parts) !== 3) {
                 return response()->json(['message' => 'Invalid token format.'], 401);
@@ -110,34 +109,108 @@ class AuthController extends Controller
             }
 
             $email = $payload['email'];
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                if (!$user->is_active) {
+                    return response()->json(['message' => 'Account is deactivated.'], 403);
+                }
+                $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+                return response()->json([
+                    'message' => 'Login successful.',
+                    'user' => [
+                        'id' => $user->id,
+                        'consumer_code' => $user->consumer_code,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'mobile_number' => $user->mobile_number,
+                        'profile_photo' => $user->profile_photo,
+                        'is_verified' => $user->is_verified,
+                        'roles' => $user->getRoleNames(),
+                    ],
+                    'token' => $token,
+                ]);
+            }
+
             $name = $payload['name'] ?? explode('@', $email)[0];
             $nameParts = explode(' ', $name, 2);
 
-            $user = User::where('email', $email)->first();
+            return response()->json([
+                'needs_profile' => true,
+                'firebase_token' => $validated['firebase_token'],
+                'email' => $email,
+                'first_name' => $nameParts[0],
+                'last_name' => $nameParts[1] ?? '',
+                'profile_photo' => $payload['picture'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Firebase login failed: ' . $e->getMessage()], 500);
+        }
+    }
 
-            if (!$user) {
-                $user = User::create([
-                    'first_name' => $nameParts[0],
-                    'last_name' => $nameParts[1] ?? '',
-                    'email' => $email,
-                    'mobile_number' => 'GOOGLE-' . ($payload['sub'] ?? uniqid()),
-                    'profile_photo' => $payload['picture'] ?? null,
-                    'password' => Hash::make(Str::random(32)),
-                    'consumer_code' => 'ANT-' . strtoupper(uniqid()),
-                    'is_verified' => true,
-                ]);
-                $user->email_verified_at = now();
-                $user->save();
+    public function completeGoogleRegistration(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'firebase_token' => 'required|string',
+                'mobile_number' => 'required|string|max:15|unique:users,mobile_number',
+                'address_line1' => 'required|string|max:255',
+                'barangay' => 'required|string|max:100',
+                'city' => 'required|string|max:100',
+                'province' => 'required|string|max:100',
+                'zip_code' => 'required|string|max:10',
+            ]);
+
+            $parts = explode('.', $validated['firebase_token']);
+
+            if (count($parts) !== 3) {
+                return response()->json(['message' => 'Invalid token format.'], 401);
             }
 
-            if (!$user->is_active) {
-                return response()->json(['message' => 'Account is deactivated.'], 403);
+            $decoded = base64_decode(strtr($parts[1], '-_', '+/'), true);
+
+            if ($decoded === false) {
+                return response()->json(['message' => 'Invalid token encoding.'], 401);
             }
+
+            $payload = json_decode($decoded, true);
+
+            if (!$payload || !isset($payload['email'])) {
+                return response()->json(['message' => 'Invalid token payload.'], 401);
+            }
+
+            $email = $payload['email'];
+
+            if (User::where('email', $email)->exists()) {
+                return response()->json(['message' => 'Account already exists.'], 409);
+            }
+
+            $name = $payload['name'] ?? explode('@', $email)[0];
+            $nameParts = explode(' ', $name, 2);
+
+            $user = User::create([
+                'first_name' => $nameParts[0],
+                'last_name' => $nameParts[1] ?? '',
+                'email' => $email,
+                'mobile_number' => $validated['mobile_number'],
+                'address_line1' => $validated['address_line1'],
+                'barangay' => $validated['barangay'],
+                'city' => $validated['city'],
+                'province' => $validated['province'],
+                'zip_code' => $validated['zip_code'],
+                'profile_photo' => $payload['picture'] ?? null,
+                'password' => Hash::make(Str::random(32)),
+                'consumer_code' => 'ANT-' . strtoupper(uniqid()),
+                'is_verified' => true,
+            ]);
+            $user->email_verified_at = now();
+            $user->save();
 
             $token = $user->createToken('auth-token', ['*'])->plainTextToken;
 
             return response()->json([
-                'message' => 'Login successful.',
+                'message' => 'Registration complete.',
                 'user' => [
                     'id' => $user->id,
                     'consumer_code' => $user->consumer_code,
@@ -152,7 +225,7 @@ class AuthController extends Controller
                 'token' => $token,
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['message' => 'Firebase login failed: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Registration failed: ' . $e->getMessage()], 500);
         }
     }
 

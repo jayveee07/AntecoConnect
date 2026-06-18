@@ -12,12 +12,17 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
   const [googleLoading, setGoogleLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [step, setStep] = React.useState(1);
+  const [googleProfile, setGoogleProfile] = React.useState(null);
 
   const [l, setL] = React.useState({ email: '', password: '' });
   const [r, setR] = React.useState({
     first_name: '', last_name: '', email: '', mobile_number: '',
     password: '', password_confirmation: '', address_line1: '',
     barangay: '', city: '', province: '', zip_code: '',
+  });
+  const [g, setG] = React.useState({
+    mobile_number: '', address_line1: '', barangay: '',
+    city: '', province: '', zip_code: '',
   });
 
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
@@ -81,9 +86,15 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       const user = result.user;
       const idToken = await user.getIdToken();
       const { data } = await authService.firebaseLogin(idToken);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin();
+      if (data.needs_profile) {
+        setGoogleProfile(data);
+        setMethod('google-complete');
+        setG({ mobile_number: '', address_line1: '', barangay: '', city: '', province: '', zip_code: '' });
+      } else {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onLogin();
+      }
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         const msg = err.response?.data?.message || err.message || 'Google sign-in failed.';
@@ -94,7 +105,33 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     }
   };
 
-  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); };
+  const handleGoogleComplete = async (e) => {
+    e.preventDefault();
+    if (!g.mobile_number || !g.address_line1 || !g.barangay || !g.city || !g.province || !g.zip_code) {
+      setError('Please fill in all required fields.'); return;
+    }
+    setLoading(true); setError('');
+    try {
+      const { data } = await authService.completeProfile({
+        firebase_token: googleProfile.firebase_token,
+        ...g,
+      });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      onLogin();
+    } catch (err) {
+      const m = err.response?.data?.message;
+      if (m) setError(m);
+      else {
+        const es = err.response?.data?.errors;
+        setError(es ? Object.values(es).flat().join('. ') : 'Registration failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); };
 
   const Spinner = () => (
     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -119,9 +156,17 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     </button>
   );
 
-  const GoogleBtn = ({ compact }) => (
+  const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
+      <input name={name} type={type || 'text'} className={input + (error && !value ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+        value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
+    </div>
+  );
+
+  const GoogleBtn = () => (
     <button type="button" onClick={handleGoogleLogin} disabled={googleLoading}
-      className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm ${compact ? '' : 'min-h-[48px]'}`}>
+      className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm">
       {googleLoading ? <Spinner /> : (
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -132,14 +177,6 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       )}
       {googleLoading ? 'Connecting...' : 'Continue with Google'}
     </button>
-  );
-
-  const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
-    <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
-      <input name={name} type={type || 'text'} className={input + (error && !value ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
-        value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
-    </div>
   );
 
   const MethodChoice = () => (
@@ -161,6 +198,24 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     </div>
   );
 
+  const GoogleCompleteForm = () => (
+    <form onSubmit={handleGoogleComplete} className="space-y-4">
+      <div className="text-center mb-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Just a few more details to complete your account</p>
+      </div>
+      <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
+      <Field name="address_line1" label="Home Address" placeholder="123 Street, Barangay" value={g.address_line1} onChange={up(g, setG)} required />
+      <div className="grid grid-cols-3 gap-3">
+        <Field name="barangay" label="Barangay" placeholder="Barangay" value={g.barangay} onChange={up(g, setG)} required />
+        <Field name="city" label="City" placeholder="City" value={g.city} onChange={up(g, setG)} required />
+        <Field name="province" label="Province" placeholder="Province" value={g.province} onChange={up(g, setG)} required />
+      </div>
+      <Field name="zip_code" label="Zip Code" placeholder="xxxx" value={g.zip_code} onChange={up(g, setG)} required />
+      <SubmitBtn fullWidth>{loading ? 'Completing...' : 'Complete Registration'}</SubmitBtn>
+    </form>
+  );
+
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 relative">
       <button onClick={toggleTheme} className="absolute top-4 right-4 z-20 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
@@ -175,17 +230,19 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
           <div className="text-center mb-8">
             <img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
+              {method === 'google-complete' ? 'Complete Your Profile' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
             </h1>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              {mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
+              {method === 'google-complete' ? 'Fill in your details to get started' : mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
             </p>
           </div>
 
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-800 p-6 sm:p-8">
-            <div className="flex mb-6 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1">
-              <Tab label="Login" /><Tab label="Register" />
-            </div>
+            {method !== 'google-complete' && (
+              <div className="flex mb-6 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1">
+                <Tab label="Login" /><Tab label="Register" />
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl px-4 py-3 text-sm">
@@ -194,7 +251,9 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
               </div>
             )}
 
-            {!method ? (
+            {method === 'google-complete' ? (
+              <GoogleCompleteForm />
+            ) : !method ? (
               <MethodChoice />
             ) : method === 'email' && mode === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
@@ -264,12 +323,14 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
             ) : null}
           </div>
 
-          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-            {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-            <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')} className="text-primary-500 hover:text-primary-600 font-semibold">
-              {mode === 'login' ? 'Register' : 'Sign In'}
-            </button>
-          </p>
+          {method !== 'google-complete' && (
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
+              {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+              <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')} className="text-primary-500 hover:text-primary-600 font-semibold">
+                {mode === 'login' ? 'Register' : 'Sign In'}
+              </button>
+            </p>
+          )}
         </div>
       </div>
 
