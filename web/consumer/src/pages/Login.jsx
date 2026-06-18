@@ -149,9 +149,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 mx-auto mb-4 bg-primary-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30">
-              <span className="text-white text-xl font-bold">A</span>
-            </div>
+            <img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
             </h1>
@@ -251,9 +249,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-500/10 rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 text-white max-w-md p-12">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-            <span className="text-2xl font-bold">A</span>
-          </div>
+          <img src="/anteco.png" alt="ANTECO" className="h-14 mb-6 brightness-0 invert opacity-80" />
           <h2 className="text-4xl font-bold mb-4 leading-tight">Powering Progress,<br />Connecting Lives</h2>
           <p className="text-white/70 text-base leading-relaxed mb-10">
             ANTECO CONNECT brings you closer to your electric cooperative. Manage bills, report outages, track consumption, and access services all in one place.
