@@ -86,6 +86,17 @@
       0 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     ),
   ),
+  'spatie/laravel-google-cloud-storage' => 
+  array (
+    'aliases' => 
+    array (
+      'GoogleCloudStorage' => 'Spatie\\GoogleCloudStorage\\GoogleCloudStorageFacade',
+    ),
+    'providers' => 
+    array (
+      0 => 'Spatie\\GoogleCloudStorage\\GoogleCloudStorageServiceProvider',
+    ),
+  ),
   'spatie/laravel-permission' => 
   array (
     'providers' => 
