@@ -14,11 +14,12 @@ import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 
 function App() {
-  const [isDark, setIsDark] = React.useState(true);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isDark, setIsDark] = React.useState(() => localStorage.getItem('theme') === 'dark');
+  const [isAuthenticated, setIsAuthenticated] = React.useState(() => !!localStorage.getItem('token'));
 
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
   if (!isAuthenticated) {
