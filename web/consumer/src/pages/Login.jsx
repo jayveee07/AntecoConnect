@@ -36,8 +36,24 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     }
   };
 
+  const validateStep = (s) => {
+    if (s === 1 && (!r.first_name || !r.last_name || !r.email || !r.mobile_number)) {
+      setError('Please fill in all required fields.'); return false;
+    }
+    if (s === 2 && (!r.address_line1 || !r.barangay || !r.city || !r.province || !r.zip_code)) {
+      setError('Please fill in all address fields.'); return false;
+    }
+    if (s === 3 && r.password !== r.password_confirmation) {
+      setError('Passwords do not match.'); return false;
+    }
+    return true;
+  };
+
+  const goStep = (s) => { if (validateStep(step)) setStep(s); };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!validateStep(3)) return;
     setLoading(true); setError('');
     try {
       const { data } = await authService.register(r);
@@ -62,15 +78,10 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(firebaseAuth, provider);
       const user = result.user;
-      localStorage.setItem('firebase_user', JSON.stringify({ displayName: user.displayName, email: user.email, photoURL: user.photoURL, uid: user.uid }));
       const idToken = await user.getIdToken();
-      try {
-        const { data } = await authService.login({ firebase_token: idToken });
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      } catch {
-        localStorage.setItem('firebase_token', idToken);
-      }
+      const { data } = await authService.login({ firebase_token: idToken });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       onLogin();
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
@@ -196,7 +207,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                     </div>
                     <Field name="email" label="Email Address" type="email" placeholder="juan@email.com" value={r.email} onChange={up(r, setR)} required />
                     <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
-                    <SubmitBtn onClick={() => setStep(2)} fullWidth>Next Step</SubmitBtn>
+                    <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
                   </div>
                 )}
                 {step === 2 && (
@@ -210,7 +221,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                     <Field name="zip_code" label="Zip Code" placeholder="xxxx" value={r.zip_code} onChange={up(r, setR)} required />
                     <div className="flex gap-3">
                       <SubmitBtn onClick={() => setStep(1)} secondary>Back</SubmitBtn>
-                      <SubmitBtn onClick={() => setStep(3)}>Next Step</SubmitBtn>
+                      <SubmitBtn onClick={() => goStep(3)}>Next Step</SubmitBtn>
                     </div>
                   </div>
                 )}
