@@ -27,7 +27,7 @@ function App() {
       <>
         <Toaster position="top-right" />
         <Routes>
-          <Route path="*" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
+          <Route path="*" element={<Login isDark={isDark} toggleTheme={() => setIsDark(!isDark)} onLogin={() => setIsAuthenticated(true)} />} />
         </Routes>
       </>
     );
