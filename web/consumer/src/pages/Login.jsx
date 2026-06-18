@@ -7,6 +7,7 @@ const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 fo
 
 export default function Login({ onLogin, isDark, toggleTheme }) {
   const [mode, setMode] = React.useState('login');
+  const [method, setMethod] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [googleLoading, setGoogleLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -92,7 +93,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     }
   };
 
-  const switchMode = () => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setStep(1); };
+  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); };
 
   const Spinner = () => (
     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -102,7 +103,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
   );
 
   const Tab = ({ label }) => (
-    <button onClick={() => { setMode(label.toLowerCase()); setError(''); setStep(1); }}
+    <button onClick={() => switchMode(label.toLowerCase())}
       className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${mode === label.toLowerCase() ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}>
       {label}
     </button>
@@ -117,9 +118,9 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     </button>
   );
 
-  const GoogleBtn = () => (
+  const GoogleBtn = ({ compact }) => (
     <button type="button" onClick={handleGoogleLogin} disabled={googleLoading}
-      className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm">
+      className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm ${compact ? '' : 'min-h-[48px]'}`}>
       {googleLoading ? <Spinner /> : (
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -132,19 +133,30 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     </button>
   );
 
-  const Divider = () => (
-    <div className="flex items-center gap-3 my-6">
-      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">or continue with email</span>
-      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-    </div>
-  );
-
   const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
     <div>
       <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
       <input name={name} type={type || 'text'} className={input + (error && !value ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
         value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
+    </div>
+  );
+
+  const MethodChoice = () => (
+    <div className="space-y-3">
+      <GoogleBtn />
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white dark:bg-gray-900 px-3 text-gray-400 dark:text-gray-500">or</span>
+        </div>
+      </div>
+      <button onClick={() => setMethod('email')}
+        className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/30">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        Sign {mode === 'login' ? 'In' : 'Up'} with Email
+      </button>
     </div>
   );
 
@@ -181,11 +193,14 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
               </div>
             )}
 
-            <GoogleBtn />
-            <Divider />
-
-            {mode === 'login' ? (
+            {!method ? (
+              <MethodChoice />
+            ) : method === 'email' && mode === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email Login</span>
+                  <button type="button" onClick={() => { setMethod(null); setError(''); }} className="text-xs text-primary-500 hover:text-primary-600 font-semibold">Back</button>
+                </div>
                 <Field name="email" label="Email Address" type="email" placeholder="Enter your email" value={l.email} onChange={up(l, setL)} required />
                 <Field name="password" label="Password" type="password" placeholder="Enter your password" value={l.password} onChange={up(l, setL)} required />
                 <div className="flex items-center justify-between">
@@ -197,8 +212,12 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                 </div>
                 <SubmitBtn fullWidth>{loading ? 'Signing In...' : 'Sign In'}</SubmitBtn>
               </form>
-            ) : (
+            ) : method === 'email' && mode === 'register' ? (
               <form onSubmit={handleRegister}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email Registration</span>
+                  <button type="button" onClick={() => { setMethod(null); setError(''); }} className="text-xs text-primary-500 hover:text-primary-600 font-semibold">Back</button>
+                </div>
                 {step === 1 && (
                   <div className="space-y-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-3">
@@ -241,12 +260,12 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                   ))}
                 </div>
               </form>
-            )}
+            ) : null}
           </div>
 
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
             {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-            <button onClick={switchMode} className="text-primary-500 hover:text-primary-600 font-semibold">
+            <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')} className="text-primary-500 hover:text-primary-600 font-semibold">
               {mode === 'login' ? 'Register' : 'Sign In'}
             </button>
           </p>
