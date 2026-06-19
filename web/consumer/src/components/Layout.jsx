@@ -2,9 +2,10 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Receipt, CreditCard, Zap, AlertTriangle,
-  ClipboardList, HeadphonesIcon, Settings, User, Menu, X,
+  ClipboardList, HeadphonesIcon, User, Menu, X,
   Sun, Moon, Bell, LogOut,
 } from 'lucide-react';
+import LogoutPrompt from './LogoutPrompt';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -19,6 +20,13 @@ const navItems = [
 export default function Layout({ isDark, toggleTheme, onLogout }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [showLogout, setShowLogout] = React.useState(false);
+  const [loggingOut, setLoggingOut] = React.useState(false);
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
+    await onLogout();
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -96,7 +104,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
             <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <button onClick={onLogout} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-red-500">
+            <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-red-500">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
@@ -106,6 +114,13 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
           <Outlet />
         </main>
       </div>
+
+      <LogoutPrompt
+        isOpen={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={handleLogoutConfirm}
+        loading={loggingOut}
+      />
     </div>
   );
 }
