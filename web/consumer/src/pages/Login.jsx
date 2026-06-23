@@ -1,7 +1,9 @@
 import React from 'react';
-import { auth as firebaseAuth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { authService } from '../services';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
@@ -13,8 +15,10 @@ const Field = ({ name, label, type, placeholder, value, onChange, required, minL
   </div>
 );
 
-export default function Login({ onLogin, isDark, toggleTheme }) {
-  const [mode, setMode] = React.useState('login');
+export default function Login({ isDark, toggleTheme, defaultMode }) {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [mode, setMode] = React.useState(defaultMode || searchParams.get('mode') || 'login');
   const [method, setMethod] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [googleLoading, setGoogleLoading] = React.useState(false);
@@ -39,12 +43,15 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const { data } = await authService.login(l);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin();
+      await signInWithEmailAndPassword(auth, l.email, l.password);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed.');
+      const m = err.code === 'auth/user-not-found' ? 'No account found with this email'
+        : err.code === 'auth/wrong-password' ? 'Incorrect password'
+        : err.code === 'auth/invalid-credential' ? 'Invalid email or password'
+        : err.code === 'auth/too-many-requests' ? 'Too many attempts. Please try again later.'
+        : err.message || 'Login failed.';
+      setError(m);
     } finally {
       setLoading(false);
     }
@@ -70,17 +77,33 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     if (!validateStep(3)) return;
     setLoading(true); setError('');
     try {
-      const { data } = await authService.register(r);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin();
+      const cred = await createUserWithEmailAndPassword(auth, r.email, r.password);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        uid: cred.user.uid,
+        role: 'consumer',
+        first_name: r.first_name,
+        last_name: r.last_name,
+        email: r.email,
+        mobile_number: r.mobile_number,
+        phoneNumber: r.mobile_number,
+        address_line1: r.address_line1,
+        barangay: r.barangay,
+        city: r.city,
+        province: r.province,
+        zip_code: r.zip_code,
+        isEmailVerified: false,
+        accountStatus: 'active',
+        is_verified: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      toast.success('Account created successfully!');
+      navigate('/dashboard');
     } catch (err) {
-      const m = err.response?.data?.message;
-      if (m) setError(m);
-      else {
-        const es = err.response?.data?.errors;
-        setError(es ? Object.values(es).flat().join('. ') : 'Registration failed.');
-      }
+      const m = err.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
+        : err.code === 'auth/weak-password' ? 'Password must be at least 6 characters'
+        : err.message || 'Registration failed.';
+      setError(m);
     } finally {
       setLoading(false);
     }
@@ -90,23 +113,25 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     setGoogleLoading(true); setError('');
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(firebaseAuth, provider);
+      const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const idToken = await user.getIdToken();
-      const { data } = await authService.firebaseLogin(idToken);
-      if (data.needs_profile) {
-        setGoogleProfile(data);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists()) {
+        const names = (user.displayName || '').split(' ');
+        setGoogleProfile({
+          first_name: names[0] || '',
+          last_name: names.slice(1).join(' ') || '',
+          email: user.email,
+          uid: user.uid,
+        });
         setMethod('google-complete');
         setG({ mobile_number: '', address_line1: '', barangay: '', city: '', province: '', zip_code: '' });
       } else {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        onLogin();
+        navigate('/dashboard');
       }
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        const msg = err.response?.data?.message || err.message || 'Google sign-in failed.';
-        setError(msg);
+        setError(err.message || 'Google sign-in failed.');
       }
     } finally {
       setGoogleLoading(false);
@@ -120,20 +145,28 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
     }
     setLoading(true); setError('');
     try {
-      const { data } = await authService.completeProfile({
-        firebase_token: googleProfile.firebase_token,
-        ...g,
+      await setDoc(doc(db, 'users', googleProfile.uid), {
+        uid: googleProfile.uid,
+        role: 'consumer',
+        first_name: googleProfile.first_name,
+        last_name: googleProfile.last_name,
+        email: googleProfile.email,
+        mobile_number: g.mobile_number,
+        phoneNumber: g.mobile_number,
+        address_line1: g.address_line1,
+        barangay: g.barangay,
+        city: g.city,
+        province: g.province,
+        zip_code: g.zip_code,
+        isEmailVerified: true,
+        accountStatus: 'active',
+        is_verified: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin();
+      navigate('/dashboard');
     } catch (err) {
-      const m = err.response?.data?.message;
-      if (m) setError(m);
-      else {
-        const es = err.response?.data?.errors;
-        setError(es ? Object.values(es).flat().join('. ') : 'Registration failed.');
-      }
+      setError(err.message || 'Failed to complete registration.');
     } finally {
       setLoading(false);
     }
@@ -228,7 +261,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" />
+            <Link to="/"><img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" /></Link>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {method === 'google-complete' ? 'Complete Your Profile' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
             </h1>
@@ -268,7 +301,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                     <input type="checkbox" defaultChecked className="rounded border-gray-300 dark:border-gray-600 text-primary-500 focus:ring-primary-500/50" />
                     <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">Remember me</span>
                   </label>
-                  <button type="button" className="text-xs text-primary-500 hover:text-primary-600 font-semibold">Forgot Password?</button>
+                  <Link to="/forgot-password" className="text-xs text-primary-500 hover:text-primary-600 font-semibold">Forgot Password?</Link>
                 </div>
                 <SubmitBtn fullWidth>{loading ? 'Signing In...' : 'Sign In'}</SubmitBtn>
               </form>
@@ -306,7 +339,7 @@ export default function Login({ onLogin, isDark, toggleTheme }) {
                 )}
                 {step === 3 && (
                   <div className="space-y-4 animate-fade-in">
-                    <Field name="password" label="Password" type="password" placeholder="Min. 8 characters" value={r.password} onChange={up(r, setR)} required minLength={8} />
+                    <Field name="password" label="Password" type="password" placeholder="Min. 6 characters" value={r.password} onChange={up(r, setR)} required minLength={6} />
                     <Field name="password_confirmation" label="Confirm Password" type="password" placeholder="Repeat password" value={r.password_confirmation} onChange={up(r, setR)} required />
                     <div className="flex gap-3">
                       <SubmitBtn onClick={() => setStep(2)} secondary>Back</SubmitBtn>

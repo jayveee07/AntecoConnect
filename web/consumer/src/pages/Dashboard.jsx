@@ -22,49 +22,39 @@ function HeadphonesIcon(props) {
 }
 
 export default function Dashboard() {
-  const [stats, setStats] = React.useState({ usage: '260 kWh', rate: '₱8.94/kWh', outages: 3 });
-  const [currentBill, setCurrentBill] = React.useState({ period: 'June 2024', amount: '2,847.50', due: 'July 15, 2024', daysLeft: 10 });
+  const [stats, setStats] = React.useState({ usage: '260 kWh', rate: '₱8.94/kWh', outages: 0 });
+  const [currentBill, setCurrentBill] = React.useState(null);
   const [consumptionData, setConsumption] = React.useState(defaultMonthly);
-  const [recentBills, setRecentBills] = React.useState([
-    { period: 'May 2024', kwh: 240, amount: '2,145.60', status: 'Paid' },
-    { period: 'April 2024', kwh: 220, amount: '1,967.80', status: 'Paid' },
-    { period: 'March 2024', kwh: 200, amount: '1,788.00', status: 'Paid' },
-  ]);
+  const [recentBills, setRecentBills] = React.useState([]);
+  const [user, setUser] = React.useState(null);
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await dashboardService.getAll();
-        const d = data.data || data;
+        const dashboardData = await dashboardService.getAll();
 
-        if (d.current_bill) {
+        if (dashboardData.user) setUser(dashboardData.user);
+
+        if (dashboardData.currentBill) {
+          const b = dashboardData.currentBill;
           setCurrentBill({
-            period: d.current_bill.billing_period,
-            amount: d.current_bill.total_amount_due?.toLocaleString() || d.current_bill.total_amount_due,
-            due: d.current_bill.due_date,
-            daysLeft: d.current_bill.days_until_due,
+            period: b.billingPeriod || b.billing_period || 'Current',
+            amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+            due: b.dueDate || b.due_date || '',
+            daysLeft: b.daysUntilDue || b.days_until_due || 0,
           });
         }
 
-        if (d.consumption?.monthly?.length) {
-          setConsumption(d.consumption.monthly.map((m) => ({
-            month: m.month || m.billing_period || '',
-            kwh: Number(m.consumption_kwh || m.kwh || 0),
-          })));
-        }
-
-        if (d.recent_bills?.length) {
-          setRecentBills(d.recent_bills.map((b) => ({
-            period: b.billing_period || b.period,
+        if (dashboardData.bills?.length) {
+          setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
+            period: b.billingPeriod || b.billing_period || '',
             kwh: b.kwh || b.consumption_kwh || 0,
-            amount: b.total_amount_due?.toLocaleString?.() || b.amount?.toLocaleString?.() || b.amount || b.total_amount_due,
-            status: b.status,
+            amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+            status: b.status || 'unknown',
           })));
         }
 
-        if (d.active_outages !== undefined) {
-          setStats((prev) => ({ ...prev, outages: d.active_outages }));
-        }
+        if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
       } catch {}
     };
     fetchData();
@@ -82,39 +72,33 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400">Welcome back</p>
+          <p className="text-gray-500 dark:text-gray-400">Welcome back{user ? `, ${user.first_name}` : ''}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="badge-info">Active</span>
-        </div>
+        <span className="badge-info">Active</span>
       </div>
 
-      <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-primary-200 text-sm">Current Bill - {currentBill.period}</p>
-            <h2 className="text-4xl font-bold mt-2">₱{currentBill.amount}</h2>
-            <p className="text-primary-200 text-sm mt-1">Due: {currentBill.due} ({currentBill.daysLeft} days remaining)</p>
+      {currentBill && (
+        <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-primary-200 text-sm">Current Bill - {currentBill.period}</p>
+              <h2 className="text-4xl font-bold mt-2">&#x20B1;{currentBill.amount}</h2>
+              {currentBill.due && <p className="text-primary-200 text-sm mt-1">Due: {currentBill.due}{currentBill.daysLeft ? ` (${currentBill.daysLeft} days remaining)` : ''}</p>}
+            </div>
+            <div className="bg-white/20 rounded-xl p-3">
+              <img src="/anteco.png" alt="ANTECO" className="w-8 h-8 brightness-0 invert" />
+            </div>
           </div>
-          <div className="bg-white/20 rounded-xl p-3 flex items-center justify-center">
-            <img src="/anteco.png" alt="ANTECO" className="w-8 h-8 brightness-0 invert" />
+          <div className="flex gap-3 mt-6">
+            <Link to="/payments" className="bg-electric-400 text-black px-6 py-3 rounded-xl font-semibold hover:bg-electric-500 transition-all">Pay Now</Link>
+            <Link to="/billing" className="bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all">View Details</Link>
           </div>
         </div>
-        <div className="flex gap-3 mt-6">
-          <Link to="/payments" className="bg-electric-400 text-black px-6 py-3 rounded-xl font-semibold hover:bg-electric-500 transition-all">
-            Pay Now
-          </Link>
-          <Link to="/billing" className="bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all">
-            View Details
-          </Link>
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {quickActions.map((action, i) => (
-          <Link key={i} to={action.path}
-            className="card-hover flex items-center gap-4"
-          >
+          <Link key={i} to={action.path} className="card-hover flex items-center gap-4">
             <div className={`${action.color} p-3 rounded-xl`}>
               <action.icon className="w-6 h-6 text-white" />
             </div>
@@ -177,29 +161,31 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg">Recent Bills</h3>
-          <Link to="/billing" className="text-primary-500 text-sm hover:underline">View All</Link>
-        </div>
-        <div className="space-y-3">
-          {recentBills.map((bill, i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <div>
-                  <p className="font-medium">{bill.period}</p>
-                  <p className="text-sm text-gray-500">{bill.kwh} kWh consumed</p>
+      {recentBills.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg">Recent Bills</h3>
+            <Link to="/billing" className="text-primary-500 text-sm hover:underline">View All</Link>
+          </div>
+          <div className="space-y-3">
+            {recentBills.map((bill, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <div>
+                    <p className="font-medium">{bill.period}</p>
+                    <p className="text-sm text-gray-500">{bill.kwh} kWh consumed</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">&#x20B1;{bill.amount}</p>
+                  <span className="badge-success">{bill.status}</span>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">₱{bill.amount}</p>
-                <span className="badge-success">{bill.status}</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
