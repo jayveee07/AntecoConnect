@@ -8,7 +8,7 @@ import {
 import LogoutPrompt from './LogoutPrompt';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/billing', icon: Receipt, label: 'Billing' },
   { path: '/payments', icon: CreditCard, label: 'Payments' },
   { path: '/consumption', icon: Zap, label: 'Consumption' },
