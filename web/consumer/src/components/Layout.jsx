@@ -1,25 +1,21 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Receipt, CreditCard, Zap, AlertTriangle,
-  ClipboardList, HeadphonesIcon, User, Menu, X,
+  LayoutDashboard, Receipt, CreditCard, Grid3X3, User,
   Sun, Moon, Bell, LogOut,
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
 
-const navItems = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/billing', icon: Receipt, label: 'Billing' },
-  { path: '/payments', icon: CreditCard, label: 'Payments' },
-  { path: '/consumption', icon: Zap, label: 'Consumption' },
-  { path: '/outages', icon: AlertTriangle, label: 'Outages' },
-  { path: '/service-requests', icon: ClipboardList, label: 'Services' },
-  { path: '/support', icon: HeadphonesIcon, label: 'Support' },
+const bottomNav = [
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
+  { path: '/billing', icon: Receipt, label: 'Bills' },
+  { path: '/payments', icon: CreditCard, label: 'Pay' },
+  { path: '/more', icon: Grid3X3, label: 'More' },
+  { path: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function Layout({ isDark, toggleTheme, onLogout }) {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [showLogout, setShowLogout] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
 
@@ -29,91 +25,54 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
-        transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <div className="flex items-center gap-3 px-6 h-16 border-b border-gray-200 dark:border-gray-800">
-          <img src="/anteco.png" alt="ANTECO" className="h-10 w-10 rounded-xl" />
-          <div>
-            <h1 className="font-bold text-lg">ANTECO</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">CONNECT</p>
-          </div>
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Header */}
+      <header className="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0">
+        <Link to="/dashboard" className="flex items-center gap-2">
+          <img src="/anteco.png" alt="ANTECO" className="h-8 w-8 rounded-lg" />
+          <span className="font-bold text-sm">ANTECO Connect</span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+          </button>
+          <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-red-500">
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
+      </header>
 
-        <nav className="p-4 space-y-1">
-          {navItems.map((item) => {
+      {/* Content */}
+      <main className="flex-1 overflow-y-auto px-4 pb-20 pt-4">
+        <Outlet />
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50 pb-safe">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+          {bottomNav.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                  ${isActive
-                    ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 font-semibold'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }
-                `}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 min-w-0 ${
+                  isActive
+                    ? 'text-primary-500'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
               >
                 <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
-        </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-800">
-          <Link
-            to="/profile"
-            onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <User className="w-5 h-5" />
-            <span>Profile</span>
-          </Link>
         </div>
-      </aside>
-
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-            <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-red-500">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
-        </main>
-      </div>
+      </nav>
 
       <LogoutPrompt
         isOpen={showLogout}
