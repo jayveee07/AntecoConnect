@@ -331,7 +331,12 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
       </div>
       {step === 1 && (
         <div className="space-y-4 animate-fade-in">
-            <Field name="mobile_number" label="Mobile Number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
+            <div>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
+            <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
+              className={input + (g.mobile_number === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+              value={g.mobile_number} onChange={(e) => setG(p => ({ ...p, mobile_number: e.target.value }))} />
+          </div>
           <SubmitBtn onClick={handleGoogleComplete} fullWidth>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
         </div>
       )}
@@ -411,7 +416,12 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                       <Field name="last_name" label="Last Name" placeholder="Dela Cruz" value={r.last_name} onChange={up(r, setR)} required />
                     </div>
                     <Field name="email" label="Email Address" type="email" placeholder="juan@email.com" value={r.email} onChange={up(r, setR)} required />
-                    <Field name="mobile_number" label="Mobile Number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
+                      <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
+                        className={input + (r.mobile_number === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+                        value={r.mobile_number} onChange={(e) => setR(p => ({ ...p, mobile_number: e.target.value }))} />
+                    </div>
                     <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
                   </div>
                 )}
