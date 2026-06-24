@@ -5,10 +5,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthP
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
-const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'true';
-if (!simulatedPhoneVerification) {
-  auth.settings.appVerificationDisabledForTesting = true;
-}
+const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'false';
 
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
