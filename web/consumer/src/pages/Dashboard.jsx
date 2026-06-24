@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   TrendingUp, AlertTriangle, Zap, ArrowUpRight,
-  Wallet, Clock, CheckCircle, Receipt,
+  Wallet, Clock, CheckCircle, Receipt, ChevronDown, Plus,
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
@@ -29,51 +29,49 @@ export default function Dashboard() {
   const [consumptionData, setConsumption] = React.useState(defaultMonthly);
   const [recentBills, setRecentBills] = React.useState([]);
   const [user, setUser] = React.useState(null);
-  const [hasAccounts, setHasAccounts] = React.useState(null);
+  const [accounts, setAccounts] = React.useState([]);
+  const [selectedAccount, setSelectedAccount] = React.useState(null);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const checkAccounts = async () => {
+    const init = async () => {
       const u = auth.currentUser;
       if (!u) return;
       try {
         const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
         const snap = await getDocs(q);
-        setHasAccounts(!snap.empty);
-      } catch { setHasAccounts(true); }
-    };
-    checkAccounts();
-  }, []);
+        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setAccounts(accts);
+        if (accts.length > 0) setSelectedAccount(accts[0]);
 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const dashboardData = await dashboardService.getAll();
-
-        if (dashboardData.user) setUser(dashboardData.user);
-
-        if (dashboardData.currentBill) {
-          const b = dashboardData.currentBill;
-          setCurrentBill({
-            period: b.billingPeriod || b.billing_period || 'Current',
-            amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
-            due: b.dueDate || b.due_date || '',
-            daysLeft: b.daysUntilDue || b.days_until_due || 0,
-          });
+        if (accts.length > 0) {
+          const dashboardData = await dashboardService.getAll();
+          if (dashboardData.user) setUser(dashboardData.user);
+          if (dashboardData.currentBill) {
+            const b = dashboardData.currentBill;
+            setCurrentBill({
+              period: b.billingPeriod || b.billing_period || 'Current',
+              amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+              due: b.dueDate || b.due_date || '',
+              daysLeft: b.daysUntilDue || b.days_until_due || 0,
+            });
+          }
+          if (dashboardData.bills?.length) {
+            setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
+              period: b.billingPeriod || b.billing_period || '',
+              kwh: b.kwh || b.consumption_kwh || 0,
+              amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+              status: b.status || 'unknown',
+            })));
+          }
+          if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
         }
-
-        if (dashboardData.bills?.length) {
-          setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
-            period: b.billingPeriod || b.billing_period || '',
-            kwh: b.kwh || b.consumption_kwh || 0,
-            amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
-            status: b.status || 'unknown',
-          })));
-        }
-
-        if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     };
-    fetchData();
+    init();
   }, []);
 
   const quickActions = [
@@ -83,33 +81,84 @@ export default function Dashboard() {
     { icon: HeadphonesIcon, label: 'Contact Support', path: '/support', color: 'bg-purple-500' },
   ];
 
+  // No accounts — show only link prompt
+  if (!loading && accounts.length === 0) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Zap className="w-10 h-10 text-primary-500" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Welcome{user ? `, ${user.first_name}` : ''}!</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
+            Link your ANTECO electric service account to start managing your bills, track usage, and more.
+          </p>
+          <Link to="/add-account"
+            className="inline-flex items-center gap-2 bg-primary-500 text-white px-8 py-4 rounded-xl font-semibold text-base hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/25">
+            <Plus className="w-5 h-5" />
+            Link Your Account
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Account Selector */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400">Welcome back{user ? `, ${user.first_name}` : ''}</p>
         </div>
-        <span className="badge-info">Active</span>
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium hover:border-primary-300 dark:hover:border-primary-700 transition-all"
+          >
+            <Zap className="w-4 h-4 text-primary-500" />
+            <span>{selectedAccount?.accountNumber || 'Select Account'}</span>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {dropdownOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-20 py-2 overflow-hidden">
+                {accounts.map((acct) => (
+                  <button
+                    key={acct.id}
+                    onClick={() => { setSelectedAccount(acct); setDropdownOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all ${
+                      selectedAccount?.id === acct.id
+                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 font-medium'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <Zap className="w-4 h-4 shrink-0" />
+                    <div>
+                      <p className="font-medium">{acct.accountNumber}</p>
+                      <p className="text-xs text-gray-400 truncate">{acct.accountName || ''}</p>
+                    </div>
+                    {acct.status === 'active' && <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-medium">Active</span>}
+                  </button>
+                ))}
+                <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                  <Link to="/add-account"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Account
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      {hasAccounts === false && (
-        <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
-          <div className="flex items-start gap-4">
-            <div className="bg-white/20 rounded-xl p-3 shrink-0">
-              <Zap className="w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg">Link Your Electric Account</h3>
-              <p className="text-primary-200 text-sm mt-1">Connect your ANTECO service account to view bills, track usage, and more.</p>
-              <Link to="/add-account" className="inline-flex items-center gap-2 mt-4 bg-white text-primary-700 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-50 transition-all">
-                Link Account Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Current Bill */}
       {currentBill && (
         <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
           <div className="flex items-start justify-between">
@@ -129,6 +178,7 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {quickActions.map((action, i) => (
           <Link key={i} to={action.path} className="card-hover flex items-center gap-4">
@@ -140,6 +190,7 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat-card">
           <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
@@ -170,6 +221,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Consumption Chart */}
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-semibold text-lg">Energy Consumption Trend</h3>
@@ -194,6 +246,7 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
+      {/* Recent Bills */}
       {recentBills.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
