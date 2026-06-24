@@ -10,6 +10,11 @@
  */
 
 const SEED_DATA = {
+  consumers: [
+    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 P. Burgos St., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 M.L. Quezon St., Mayamot', barangay: 'Mayamot', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Rizal Ave., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+  ],
   users: [
     { uid: 'demo-consumer-1', role: 'consumer', first_name: 'Juan', last_name: 'Dela Cruz', email: 'juan@anteco.ph', mobile_number: '09171234567', address_line1: '123 P. Burgos St.', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zip_code: '1870', isEmailVerified: true, accountStatus: 'active', is_verified: true },
     { uid: 'demo-consumer-2', role: 'consumer', first_name: 'Maria', last_name: 'Santos', email: 'maria@anteco.ph', mobile_number: '09179876543', address_line1: '456 M.L. Quezon St.', barangay: 'Mayamot', city: 'Antipolo City', province: 'Rizal', zip_code: '1870', isEmailVerified: true, accountStatus: 'active', is_verified: true },
@@ -77,6 +82,7 @@ const SEED_DATA = {
 };
 
 const USER_SCOPED = ['billingStatements', 'consumptionData', 'payments', 'outageReports', 'serviceRequests', 'supportTickets'];
+const PUBLIC_COLLECTIONS = ['consumers', 'plannedInterruptions', 'announcements', 'energySavingTips', 'faqs'];
 
 async function seedCollection(name, data, userId) {
   const { db } = await import('./firebase.js');

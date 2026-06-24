@@ -129,24 +129,40 @@ export default function Profile({ onLogout }) {
     if (!user) return;
     setAddingAccount(true);
     try {
-      const q = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid), where('accountNumber', '==', newAccountNumber.trim()));
-      const existing = await getDocs(q);
-      if (!existing.empty) {
+      const can = newAccountNumber.trim().toUpperCase();
+
+      const existing = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid), where('accountNumber', '==', can));
+      const existingSnap = await getDocs(existing);
+      if (!existingSnap.empty) {
         toast.error('This account is already linked');
         setAddingAccount(false);
         return;
       }
+
+      const consumerQuery = query(collection(db, 'consumers'), where('can', '==', can));
+      const consumerSnap = await getDocs(consumerQuery);
+
+      if (consumerSnap.empty) {
+        toast.error('Account number not found in ANTECO records');
+        setAddingAccount(false);
+        return;
+      }
+
+      const consumer = consumerSnap.docs[0].data();
+
       await addDoc(collection(db, 'consumerAccounts'), {
         userId: user.uid,
-        accountNumber: newAccountNumber.trim(),
-        status: 'pending_verification',
+        accountNumber: can,
+        accountName: consumer.ownerName,
+        status: 'active',
+        consumerId: consumerSnap.docs[0].id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      setLinkedAccounts([...linkedAccounts, { accountNumber: newAccountNumber.trim(), status: 'pending_verification' }]);
+      setLinkedAccounts([...linkedAccounts, { accountNumber: can, accountName: consumer.ownerName, status: 'active', consumerId: consumerSnap.docs[0].id }]);
       setNewAccountNumber('');
       setShowAddAccount(false);
-      toast.success('Account link request submitted');
+      toast.success('Account linked successfully');
     } catch {
       toast.error('Failed to link account');
     } finally {

@@ -40,6 +40,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Master list of all ANTECO consumer accounts (CAN, owner name, address)
+    match /consumers/{consumerId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+
     // Consumer accounts
     match /consumerAccounts/{accountId} {
       allow read: if isAuthenticated() && (

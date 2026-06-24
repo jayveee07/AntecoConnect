@@ -4,6 +4,11 @@ import { auth, db } from '../firebase';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 const SEED_DATA = {
+  consumers: [
+    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 P. Burgos St., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 M.L. Quezon St., Mayamot', barangay: 'Mayamot', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Rizal Ave., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+  ],
   billingStatements: [
     { billNumber: 'BILL-2025-06-001', billingPeriod: 'Jun 2025', dueDate: '2025-07-15', kwh: 245, consumptionKwh: 245, totalAmountDue: 2540.75, amountPaid: 0, balance: 2540.75, status: 'unpaid', readingDays: 30, ratePerKwh: 8.50 },
     { billNumber: 'BILL-2025-05-001', billingPeriod: 'May 2025', dueDate: '2025-06-15', kwh: 220, consumptionKwh: 220, totalAmountDue: 2281.50, amountPaid: 2281.50, balance: 0, status: 'paid', readingDays: 31, ratePerKwh: 8.50 },

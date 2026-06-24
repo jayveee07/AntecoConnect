@@ -44,31 +44,52 @@ export default function AddAccount() {
 
     setLoading(true);
     try {
-      const q = query(
+      const can = form.accountNumber.trim().toUpperCase();
+
+      const alreadyLinked = query(
         collection(db, 'consumerAccounts'),
         where('userId', '==', user.uid),
-        where('accountNumber', '==', form.accountNumber.trim())
+        where('accountNumber', '==', can)
       );
-      const existing = await getDocs(q);
+      const existing = await getDocs(alreadyLinked);
       if (!existing.empty) {
         setError('This account number is already linked to your profile.');
         setLoading(false);
         return;
       }
 
+      const consumerQuery = query(collection(db, 'consumers'), where('can', '==', can));
+      const consumerSnap = await getDocs(consumerQuery);
+
+      if (consumerSnap.empty) {
+        setError('Account number not found in ANTECO records. Please check your bill and try again.');
+        setLoading(false);
+        return;
+      }
+
+      const consumer = consumerSnap.docs[0].data();
+      const nameMatch = consumer.ownerName?.toLowerCase() === form.accountName.trim().toLowerCase();
+
+      if (!nameMatch) {
+        setError('The name you entered does not match our records for this account number. Please check your bill.');
+        setLoading(false);
+        return;
+      }
+
       await addDoc(collection(db, 'consumerAccounts'), {
         userId: user.uid,
-        accountNumber: form.accountNumber.trim(),
-        accountName: form.accountName.trim(),
+        accountNumber: can,
+        accountName: consumer.ownerName,
         relationship: form.relationship === 'other' ? form.relationshipOther.trim() : form.relationship,
         mobileNumber: form.mobileNumber.trim(),
         mobileVerified: false,
-        status: 'pending_verification',
+        status: 'active',
+        consumerId: consumerSnap.docs[0].id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
 
-      toast.success('Account link submitted for verification!');
+      toast.success('Account verified and linked successfully!');
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to link account.');
@@ -83,7 +104,7 @@ export default function AddAccount() {
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
           <h1 className="text-2xl font-bold">Link Your Account</h1>
@@ -99,24 +120,22 @@ export default function AddAccount() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Account Number */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                Account Number <span className="text-red-400">*</span>
+                Account Number (CAN) <span className="text-red-400">*</span>
               </label>
-              <input name="accountNumber" className={inputClass} placeholder="e.g. ANT-2025-XXXXX" value={form.accountNumber} onChange={up(setForm)} required />
+              <input name="accountNumber" className={inputClass} placeholder="e.g. ANT-2025-0001" value={form.accountNumber} onChange={up(setForm)} required />
               <p className="text-xs text-gray-400 mt-1">You can find this on your electric bill.</p>
             </div>
 
-            {/* Account Name */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                Name on Account <span className="text-red-400">*</span>
+                Name of Account Owner <span className="text-red-400">*</span>
               </label>
-              <input name="accountName" className={inputClass} placeholder="Full name as shown on bill" value={form.accountName} onChange={up(setForm)} required />
+              <input name="accountName" className={inputClass} placeholder="Exact name as shown on bill" value={form.accountName} onChange={up(setForm)} required />
+              <p className="text-xs text-gray-400 mt-1">Must match the name registered with ANTECO.</p>
             </div>
 
-            {/* Relationship */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                 Your Connection to This Account <span className="text-red-400">*</span>
@@ -141,21 +160,13 @@ export default function AddAccount() {
                 ))}
               </div>
               {form.relationship === 'other' && (
-                <input
-                  name="relationshipOther"
-                  className={`${inputClass} mt-2`}
-                  placeholder="Please specify"
-                  value={form.relationshipOther}
-                  onChange={up(setForm)}
-                  autoFocus
-                />
+                <input name="relationshipOther" className={`${inputClass} mt-2`} placeholder="Please specify" value={form.relationshipOther} onChange={up(setForm)} autoFocus />
               )}
             </div>
 
-            {/* Mobile Number */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                Mobile Number for Verification <span className="text-red-400">*</span>
+                Mobile Number <span className="text-red-400">*</span>
               </label>
               <input name="mobileNumber" type="tel" className={inputClass} placeholder="0917xxxxxxx" value={form.mobileNumber} onChange={up(setForm)} required />
               <p className="text-xs text-gray-400 mt-1">We will use this to verify your identity.</p>
@@ -169,7 +180,7 @@ export default function AddAccount() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               )}
-              {loading ? 'Submitting...' : 'Submit for Verification'}
+              {loading ? 'Verifying...' : 'Verify & Link Account'}
             </button>
           </form>
 
