@@ -5,7 +5,9 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthP
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
-auth.settings.appVerificationDisabledForTesting = true;
+if (import.meta.env.VITE_BYPASS_PHONE_VERIFICATION === 'true') {
+  auth.settings.appVerificationDisabledForTesting = true;
+}
 
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
@@ -168,7 +170,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
 
   const setupRecaptcha = () => {
-    if (auth.settings.appVerificationDisabledForTesting) return;
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
@@ -184,8 +185,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     try {
       setupRecaptcha();
       const provider = new PhoneAuthProvider(auth);
-      const verifier = auth.settings.appVerificationDisabledForTesting ? undefined : window.recaptchaVerifier;
-      const verificationId = await provider.verifyPhoneNumber(formatted, verifier);
+      const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
       setPhoneVerificationId(verificationId);
       setPhoneSent(true);
       toast.success('OTP sent to ' + formatted);
