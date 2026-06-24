@@ -6,6 +6,9 @@ import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firest
 import toast from 'react-hot-toast';
 
 const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'false';
+if (!simulatedPhoneVerification) {
+  auth.settings.appVerificationDisabledForTesting = true;
+}
 
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
