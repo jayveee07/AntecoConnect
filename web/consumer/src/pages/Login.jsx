@@ -1,11 +1,14 @@
 import React from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'false';
+if (!simulatedPhoneVerification) {
+  auth.settings.appVerificationDisabledForTesting = true;
+}
 
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
@@ -168,18 +171,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
 
-  const setupRecaptcha = () => {
-    if (window.recaptchaVerifier) return;
-    try {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {},
-      });
-    } catch (e) {
-      console.error('RecaptchaVerifier init failed:', e);
-    }
-  };
-
   const handleSendOtp = async (phone, userId) => {
     setSendingOtp(true);
     setError('');
@@ -191,9 +182,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         setPhoneSent(true);
         toast.success('Your OTP code: ' + code);
       } else {
-        setupRecaptcha();
         const provider = new PhoneAuthProvider(auth);
-        const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
+        const verificationId = await provider.verifyPhoneNumber(formatted);
         setPhoneVerificationId(verificationId);
         setPhoneSent(true);
         toast.success('OTP sent to ' + formatted);
@@ -337,7 +327,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 relative">
-      <div id="recaptcha-container" />
       <button onClick={toggleTheme} className="absolute top-4 right-4 z-20 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
         {isDark ? (
           <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
