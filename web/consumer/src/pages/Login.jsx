@@ -33,6 +33,15 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [sendingOtp, setSendingOtp] = React.useState(false);
   const [verifyingOtp, setVerifyingOtp] = React.useState(false);
 
+  React.useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      getDoc(doc(db, 'users', user.uid)).then((snap) => {
+        if (snap.exists()) navigate('/dashboard', { replace: true });
+      });
+    }
+  }, [navigate]);
+
   const [l, setL] = React.useState({ email: '', password: '' });
   const [r, setR] = React.useState({
     first_name: '', last_name: '', email: '', mobile_number: '',

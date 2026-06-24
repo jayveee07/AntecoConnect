@@ -79,8 +79,8 @@ function App() {
     <>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
-        <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login isDark={isDark} toggleTheme={() => setIsDark(!isDark)} defaultMode="register" />} />
+        <Route path="/login" element={<Login isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
+        <Route path="/register" element={<Login isDark={isDark} toggleTheme={() => setIsDark(!isDark)} defaultMode="register" />} />
         <Route path="/forgot-password" element={<ForgotPassword isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
         <Route path="/reset-password" element={<ResetPassword isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
 
