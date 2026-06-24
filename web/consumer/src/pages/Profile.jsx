@@ -1,5 +1,7 @@
 import React from 'react';
 import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, ChevronRight, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -43,6 +45,7 @@ export default function Profile({ onLogout }) {
   const [showAddAccount, setShowAddAccount] = React.useState(false);
   const [newAccountNumber, setNewAccountNumber] = React.useState('');
   const [addingAccount, setAddingAccount] = React.useState(false);
+  const [accountsLoading, setAccountsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchProfile = async () => {
@@ -65,6 +68,22 @@ export default function Profile({ onLogout }) {
       }
     };
     fetchProfile();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchAccounts = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid));
+        const snap = await getDocs(q);
+        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setLinkedAccounts(accts);
+      } catch {} finally {
+        setAccountsLoading(false);
+      }
+    };
+    fetchAccounts();
   }, []);
 
   const user = profile || JSON.parse(localStorage.getItem('user') || '{}');
@@ -106,10 +125,25 @@ export default function Profile({ onLogout }) {
 
   const handleAddAccount = async () => {
     if (!newAccountNumber.trim()) return;
+    const user = auth.currentUser;
+    if (!user) return;
     setAddingAccount(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
-      setLinkedAccounts([...linkedAccounts, { account_number: newAccountNumber, status: 'pending', service_address: 'Verification pending...' }]);
+      const q = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid), where('accountNumber', '==', newAccountNumber.trim()));
+      const existing = await getDocs(q);
+      if (!existing.empty) {
+        toast.error('This account is already linked');
+        setAddingAccount(false);
+        return;
+      }
+      await addDoc(collection(db, 'consumerAccounts'), {
+        userId: user.uid,
+        accountNumber: newAccountNumber.trim(),
+        status: 'pending_verification',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      setLinkedAccounts([...linkedAccounts, { accountNumber: newAccountNumber.trim(), status: 'pending_verification' }]);
       setNewAccountNumber('');
       setShowAddAccount(false);
       toast.success('Account link request submitted');
@@ -120,9 +154,14 @@ export default function Profile({ onLogout }) {
     }
   };
 
-  const handleRemoveAccount = (accountNumber) => {
-    setLinkedAccounts(linkedAccounts.filter((a) => a.account_number !== accountNumber));
-    toast.success('Account unlinked');
+  const handleRemoveAccount = async (acctId) => {
+    try {
+      await deleteDoc(doc(db, 'consumerAccounts', acctId));
+      setLinkedAccounts(linkedAccounts.filter((a) => a.id !== acctId));
+      toast.success('Account unlinked');
+    } catch {
+      toast.error('Failed to unlink account');
+    }
   };
 
   const Field = ({ name, label, type, placeholder, value, onChange, className }) => (
@@ -335,7 +374,11 @@ export default function Profile({ onLogout }) {
             </button>
           </div>
 
-          {linkedAccounts.length === 0 ? (
+          {accountsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-4 border-primary-500 border-t-transparent rounded-full" />
+            </div>
+          ) : linkedAccounts.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-gray-400" />
@@ -347,23 +390,23 @@ export default function Profile({ onLogout }) {
           ) : (
             <div className="space-y-3">
               {linkedAccounts.map((acct) => (
-                <div key={acct.account_number} className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                <div key={acct.id || acct.accountNumber} className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center">
                       <Zap className="w-5 h-5 text-primary-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{acct.account_number}</p>
-                      <p className="text-xs text-gray-400">{acct.service_address || acct.status}</p>
+                      <p className="text-sm font-medium">{acct.accountNumber || acct.account_number}</p>
+                      <p className="text-xs text-gray-400 capitalize">{acct.relationship ? `${acct.relationship} \u2022 ` : ''}{acct.accountName || acct.account_name || ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       acct.status === 'active' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' :
-                      acct.status === 'pending' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400' :
+                      acct.status === 'pending_verification' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400' :
                       'bg-gray-100 dark:bg-gray-700 text-gray-500'
-                    }`}>{acct.status}</span>
-                    <button onClick={() => handleRemoveAccount(acct.account_number)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                    }`}>{acct.status === 'pending_verification' ? 'Pending' : acct.status}</span>
+                    <button onClick={() => handleRemoveAccount(acct.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   </div>

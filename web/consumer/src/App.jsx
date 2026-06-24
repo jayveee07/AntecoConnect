@@ -29,6 +29,7 @@ import Interruptions from './pages/public/Interruptions';
 import Accessibility from './pages/public/Accessibility';
 import Seed from './pages/Seed';
 import More from './pages/More';
+import AddAccount from './pages/AddAccount';
 
 function App() {
   const [isDark, setIsDark] = React.useState(() => localStorage.getItem('theme') === 'dark');
@@ -104,6 +105,7 @@ function App() {
             <Route path="/support" element={<Support />} />
             <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
             <Route path="/more" element={<More />} />
+            <Route path="/add-account" element={<AddAccount />} />
             <Route path="/dev/seed" element={<Seed />} />
             <Route path="*" element={<NotFound />} />
           </Route>

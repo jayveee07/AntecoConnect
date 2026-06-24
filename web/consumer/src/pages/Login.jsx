@@ -28,13 +28,11 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const [l, setL] = React.useState({ email: '', password: '' });
   const [r, setR] = React.useState({
-    first_name: '', last_name: '', email: '', mobile_number: '',
-    password: '', password_confirmation: '', address_line1: '',
-    barangay: '', city: '', province: '', zip_code: '',
+    first_name: '', last_name: '', email: '',
+    password: '', password_confirmation: '',
   });
   const [g, setG] = React.useState({
-    mobile_number: '', address_line1: '', barangay: '',
-    city: '', province: '', zip_code: '',
+    mobile_number: '',
   });
 
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
@@ -58,13 +56,10 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   };
 
   const validateStep = (s) => {
-    if (s === 1 && (!r.first_name || !r.last_name || !r.email || !r.mobile_number)) {
+    if (s === 1 && (!r.first_name || !r.last_name || !r.email)) {
       setError('Please fill in all required fields.'); return false;
     }
-    if (s === 2 && (!r.address_line1 || !r.barangay || !r.city || !r.province || !r.zip_code)) {
-      setError('Please fill in all address fields.'); return false;
-    }
-    if (s === 3 && r.password !== r.password_confirmation) {
+    if (s === 2 && r.password !== r.password_confirmation) {
       setError('Passwords do not match.'); return false;
     }
     return true;
@@ -84,13 +79,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         first_name: r.first_name,
         last_name: r.last_name,
         email: r.email,
-        mobile_number: r.mobile_number,
-        phoneNumber: r.mobile_number,
-        address_line1: r.address_line1,
-        barangay: r.barangay,
-        city: r.city,
-        province: r.province,
-        zip_code: r.zip_code,
         isEmailVerified: false,
         accountStatus: 'active',
         is_verified: false,
@@ -140,8 +128,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const handleGoogleComplete = async (e) => {
     e.preventDefault();
-    if (!g.mobile_number || !g.address_line1 || !g.barangay || !g.city || !g.province || !g.zip_code) {
-      setError('Please fill in all required fields.'); return;
+    if (!g.mobile_number) {
+      setError('Please provide your mobile number.'); return;
     }
     setLoading(true); setError('');
     try {
@@ -153,11 +141,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         email: googleProfile.email,
         mobile_number: g.mobile_number,
         phoneNumber: g.mobile_number,
-        address_line1: g.address_line1,
-        barangay: g.barangay,
-        city: g.city,
-        province: g.province,
-        zip_code: g.zip_code,
         isEmailVerified: true,
         accountStatus: 'active',
         is_verified: true,
@@ -238,13 +221,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Just a few more details to complete your account</p>
       </div>
       <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
-      <Field name="address_line1" label="Home Address" placeholder="123 Street, Barangay" value={g.address_line1} onChange={up(g, setG)} required />
-      <div className="grid grid-cols-3 gap-3">
-        <Field name="barangay" label="Barangay" placeholder="Barangay" value={g.barangay} onChange={up(g, setG)} required />
-        <Field name="city" label="City" placeholder="City" value={g.city} onChange={up(g, setG)} required />
-        <Field name="province" label="Province" placeholder="Province" value={g.province} onChange={up(g, setG)} required />
-      </div>
-      <Field name="zip_code" label="Zip Code" placeholder="xxxx" value={g.zip_code} onChange={up(g, setG)} required />
       <SubmitBtn fullWidth>{loading ? 'Completing...' : 'Complete Registration'}</SubmitBtn>
     </form>
   );
@@ -318,37 +294,21 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                       <Field name="last_name" label="Last Name" placeholder="Dela Cruz" value={r.last_name} onChange={up(r, setR)} required />
                     </div>
                     <Field name="email" label="Email Address" type="email" placeholder="juan@email.com" value={r.email} onChange={up(r, setR)} required />
-                    <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
                     <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
                   </div>
                 )}
                 {step === 2 && (
                   <div className="space-y-4 animate-fade-in">
-                    <Field name="address_line1" label="Home Address" placeholder="123 Street, Barangay" value={r.address_line1} onChange={up(r, setR)} required />
-                    <div className="grid grid-cols-3 gap-3">
-                      <Field name="barangay" label="Barangay" placeholder="Barangay" value={r.barangay} onChange={up(r, setR)} required />
-                      <Field name="city" label="City" placeholder="City" value={r.city} onChange={up(r, setR)} required />
-                      <Field name="province" label="Province" placeholder="Province" value={r.province} onChange={up(r, setR)} required />
-                    </div>
-                    <Field name="zip_code" label="Zip Code" placeholder="xxxx" value={r.zip_code} onChange={up(r, setR)} required />
-                    <div className="flex gap-3">
-                      <SubmitBtn onClick={() => setStep(1)} secondary>Back</SubmitBtn>
-                      <SubmitBtn onClick={() => goStep(3)}>Next Step</SubmitBtn>
-                    </div>
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className="space-y-4 animate-fade-in">
                     <Field name="password" label="Password" type="password" placeholder="Min. 6 characters" value={r.password} onChange={up(r, setR)} required minLength={6} />
                     <Field name="password_confirmation" label="Confirm Password" type="password" placeholder="Repeat password" value={r.password_confirmation} onChange={up(r, setR)} required />
                     <div className="flex gap-3">
-                      <SubmitBtn onClick={() => setStep(2)} secondary>Back</SubmitBtn>
+                      <SubmitBtn onClick={() => setStep(1)} secondary>Back</SubmitBtn>
                       <SubmitBtn>{loading ? 'Creating Account...' : 'Create Account'}</SubmitBtn>
                     </div>
                   </div>
                 )}
                 <div className="flex items-center justify-center gap-2 mt-6">
-                  {[1, 2, 3].map((s) => (
+                  {[1, 2].map((s) => (
                     <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
                   ))}
                 </div>

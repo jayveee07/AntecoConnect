@@ -5,6 +5,8 @@ import {
   Wallet, Clock, CheckCircle, Receipt,
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { dashboardService } from '../services';
 
 const defaultMonthly = [
@@ -27,6 +29,20 @@ export default function Dashboard() {
   const [consumptionData, setConsumption] = React.useState(defaultMonthly);
   const [recentBills, setRecentBills] = React.useState([]);
   const [user, setUser] = React.useState(null);
+  const [hasAccounts, setHasAccounts] = React.useState(null);
+
+  React.useEffect(() => {
+    const checkAccounts = async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      try {
+        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
+        const snap = await getDocs(q);
+        setHasAccounts(!snap.empty);
+      } catch { setHasAccounts(true); }
+    };
+    checkAccounts();
+  }, []);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +92,23 @@ export default function Dashboard() {
         </div>
         <span className="badge-info">Active</span>
       </div>
+
+      {hasAccounts === false && (
+        <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
+          <div className="flex items-start gap-4">
+            <div className="bg-white/20 rounded-xl p-3 shrink-0">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">Link Your Electric Account</h3>
+              <p className="text-primary-200 text-sm mt-1">Connect your ANTECO service account to view bills, track usage, and more.</p>
+              <Link to="/add-account" className="inline-flex items-center gap-2 mt-4 bg-white text-primary-700 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-50 transition-all">
+                Link Account Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {currentBill && (
         <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
