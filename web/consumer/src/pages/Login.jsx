@@ -1,17 +1,17 @@
 import React from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
-const Field = ({ name, label, type, placeholder, value, onChange, required, minLength }) => (
+const Field = ({ name, label, type, placeholder, value, onChange, required, minLength, disabled, pattern }) => (
   <div>
     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
     <input name={name} type={type || 'text'} className={input + (value === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
-      value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} />
+      value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} disabled={disabled} pattern={pattern} />
   </div>
 );
 
@@ -25,17 +25,68 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [error, setError] = React.useState('');
   const [step, setStep] = React.useState(1);
   const [googleProfile, setGoogleProfile] = React.useState(null);
+  const [createdUserId, setCreatedUserId] = React.useState(null);
+
+  const [phoneVerificationId, setPhoneVerificationId] = React.useState('');
+  const [phoneCode, setPhoneCode] = React.useState('');
+  const [phoneSent, setPhoneSent] = React.useState(false);
+  const [sendingOtp, setSendingOtp] = React.useState(false);
+  const [verifyingOtp, setVerifyingOtp] = React.useState(false);
 
   const [l, setL] = React.useState({ email: '', password: '' });
   const [r, setR] = React.useState({
-    first_name: '', last_name: '', email: '',
+    first_name: '', last_name: '', email: '', mobile_number: '',
     password: '', password_confirmation: '',
   });
-  const [g, setG] = React.useState({
-    mobile_number: '',
-  });
+  const [g, setG] = React.useState({ mobile_number: '' });
 
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {},
+      });
+    }
+  };
+
+  const handleSendOtp = async (phone, userId) => {
+    setSendingOtp(true);
+    setError('');
+    try {
+      setupRecaptcha();
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(phone, window.recaptchaVerifier);
+      setPhoneVerificationId(verificationId);
+      setPhoneSent(true);
+      toast.success('OTP sent to ' + phone);
+    } catch (err) {
+      if (err.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError(err.message || 'Failed to send OTP');
+      }
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (phone) => {
+    setVerifyingOtp(true);
+    setError('');
+    try {
+      const credential = PhoneAuthProvider.credential(phoneVerificationId, phoneCode);
+      await linkWithCredential(auth.currentUser, credential);
+      toast.success('Phone number verified!');
+      return true;
+    } catch (err) {
+      setError(err.message || 'Invalid verification code');
+      return false;
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -56,11 +107,14 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   };
 
   const validateStep = (s) => {
-    if (s === 1 && (!r.first_name || !r.last_name || !r.email)) {
+    if (s === 1 && (!r.first_name || !r.last_name || !r.email || !r.mobile_number)) {
       setError('Please fill in all required fields.'); return false;
     }
     if (s === 2 && r.password !== r.password_confirmation) {
       setError('Passwords do not match.'); return false;
+    }
+    if (s === 2 && r.password.length < 6) {
+      setError('Password must be at least 6 characters.'); return false;
     }
     return true;
   };
@@ -69,24 +123,28 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!validateStep(3)) return;
+    if (!validateStep(2)) return;
     setLoading(true); setError('');
     try {
       const cred = await createUserWithEmailAndPassword(auth, r.email, r.password);
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        uid: cred.user.uid,
+      const userId = cred.user.uid;
+      setCreatedUserId(userId);
+      await setDoc(doc(db, 'users', userId), {
+        uid: userId,
         role: 'consumer',
         first_name: r.first_name,
         last_name: r.last_name,
         email: r.email,
+        mobile_number: r.mobile_number,
         isEmailVerified: false,
+        phoneVerified: false,
         accountStatus: 'active',
         is_verified: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
+      setStep(3);
+      toast.success('Account created! Verify your phone to continue.');
     } catch (err) {
       const m = err.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
         : err.code === 'auth/weak-password' ? 'Password must be at least 6 characters'
@@ -113,7 +171,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
           uid: user.uid,
         });
         setMethod('google-complete');
-        setG({ mobile_number: '', address_line1: '', barangay: '', city: '', province: '', zip_code: '' });
+        setG({ mobile_number: '' });
+        setStep(1);
       } else {
         navigate('/dashboard');
       }
@@ -140,14 +199,15 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         last_name: googleProfile.last_name,
         email: googleProfile.email,
         mobile_number: g.mobile_number,
-        phoneNumber: g.mobile_number,
         isEmailVerified: true,
+        phoneVerified: false,
         accountStatus: 'active',
         is_verified: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      navigate('/dashboard');
+      setStep(2);
+      toast.success('Account created! Verify your phone to continue.');
     } catch (err) {
       setError(err.message || 'Failed to complete registration.');
     } finally {
@@ -155,7 +215,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     }
   };
 
-  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); };
+  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); setCreatedUserId(null); setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); };
 
   const Spinner = () => (
     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -171,11 +231,11 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     </button>
   );
 
-  const SubmitBtn = ({ onClick, children, secondary, fullWidth }) => (
-    <button type={onClick ? 'button' : 'submit'} onClick={onClick}
+  const SubmitBtn = ({ onClick, children, secondary, fullWidth, type }) => (
+    <button type={type || (onClick ? 'button' : 'submit')} onClick={onClick}
       className={`py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : 'flex-1'} ${secondary ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-primary-500 text-white hover:bg-primary-600 shadow-lg shadow-primary-500/25'}`}
-      disabled={loading}>
-      {loading ? <Spinner /> : null}
+      disabled={loading || sendingOtp || verifyingOtp}>
+      {(loading || sendingOtp || verifyingOtp) ? <Spinner /> : null}
       {children}
     </button>
   );
@@ -214,19 +274,64 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     </div>
   );
 
-  const GoogleCompleteForm = () => (
-    <form onSubmit={handleGoogleComplete} className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Just a few more details to complete your account</p>
+  const PhoneVerifyForm = ({ phone, userId }) => (
+    <div className="space-y-4 animate-fade-in">
+      <div className="text-center mb-2">
+        <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Verify your mobile number</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">An OTP will be sent to {phone}</p>
       </div>
-      <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
-      <SubmitBtn fullWidth>{loading ? 'Completing...' : 'Complete Registration'}</SubmitBtn>
-    </form>
+      {!phoneSent ? (
+        <SubmitBtn onClick={() => handleSendOtp(phone, userId)} fullWidth>
+          {sendingOtp ? 'Sending OTP...' : 'Send OTP'}
+        </SubmitBtn>
+      ) : (
+        <div className="space-y-4">
+          <Field name="phone_code" label="Enter OTP Code" placeholder="000000" value={phoneCode}
+            onChange={(e) => setPhoneCode(e.target.value)} required pattern="[0-9]{6}" />
+          <div className="flex gap-3">
+            <SubmitBtn onClick={async () => {
+              const ok = await handleVerifyOtp(phone);
+              if (ok) {
+                await updateDoc(doc(db, 'users', userId), { phoneVerified: true, updatedAt: serverTimestamp() });
+                navigate('/dashboard');
+              }
+            }} fullWidth>
+              {verifyingOtp ? 'Verifying...' : 'Verify Phone'}
+            </SubmitBtn>
+          </div>
+          <button type="button" onClick={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }}
+            className="block mx-auto text-xs text-primary-500 hover:text-primary-600 font-semibold">
+            Resend OTP
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const GoogleCompleteForm = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          {step === 1 ? 'Enter your mobile number to continue' : 'Verify your phone number'}
+        </p>
+      </div>
+      {step === 1 && (
+        <div className="space-y-4 animate-fade-in">
+          <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
+          <SubmitBtn onClick={handleGoogleComplete} fullWidth>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
+        </div>
+      )}
+      {step === 2 && <PhoneVerifyForm phone={g.mobile_number} userId={googleProfile.uid} />}
+    </div>
   );
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 relative">
+      <div id="recaptcha-container" />
       <button onClick={toggleTheme} className="absolute top-4 right-4 z-20 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
         {isDark ? (
           <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
@@ -239,15 +344,15 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
           <div className="text-center mb-8">
             <Link to="/"><img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" /></Link>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {method === 'google-complete' ? 'Complete Your Profile' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
+              {method === 'google-complete' ? 'Complete Your Profile' : step === 3 ? 'Verify Phone' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
             </h1>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              {method === 'google-complete' ? 'Fill in your details to get started' : mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
+              {method === 'google-complete' ? (step === 1 ? 'Enter your mobile number' : 'Verify your phone number') : step === 3 ? 'One more step to get started' : mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
             </p>
           </div>
 
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-800 p-6 sm:p-8">
-            {method !== 'google-complete' && (
+            {method !== 'google-complete' && step !== 3 && (
               <div className="flex mb-6 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1">
                 <Tab label="Login" /><Tab label="Register" />
               </div>
@@ -260,7 +365,9 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
               </div>
             )}
 
-            {method === 'google-complete' ? (
+            {step === 3 ? (
+              <PhoneVerifyForm phone={r.mobile_number} userId={createdUserId} />
+            ) : method === 'google-complete' ? (
               <GoogleCompleteForm />
             ) : !method ? (
               <MethodChoice />
@@ -294,6 +401,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                       <Field name="last_name" label="Last Name" placeholder="Dela Cruz" value={r.last_name} onChange={up(r, setR)} required />
                     </div>
                     <Field name="email" label="Email Address" type="email" placeholder="juan@email.com" value={r.email} onChange={up(r, setR)} required />
+                    <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
                     <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
                   </div>
                 )}
@@ -308,7 +416,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                   </div>
                 )}
                 <div className="flex items-center justify-center gap-2 mt-6">
-                  {[1, 2].map((s) => (
+                  {[1, 2, 3].map((s) => (
                     <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
                   ))}
                 </div>
@@ -316,7 +424,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
             ) : null}
           </div>
 
-          {method !== 'google-complete' && (
+          {method !== 'google-complete' && step !== 3 && (
             <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
               <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')} className="text-primary-500 hover:text-primary-600 font-semibold">
