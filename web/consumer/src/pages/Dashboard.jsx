@@ -159,24 +159,37 @@ export default function Dashboard() {
       </div>
 
       {/* Current Bill */}
-      {currentBill && (
-        <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-primary-200 text-sm">Current Bill - {currentBill.period}</p>
-              <h2 className="text-4xl font-bold mt-2">&#x20B1;{currentBill.amount}</h2>
-              {currentBill.due && <p className="text-primary-200 text-sm mt-1">Due: {currentBill.due}{currentBill.daysLeft ? ` (${currentBill.daysLeft} days remaining)` : ''}</p>}
+      <div className="bg-gradient-to-br from-primary-500 to-primary-800 rounded-2xl p-6 text-white">
+        {currentBill ? (
+          <>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-primary-200 text-sm">Current Bill - {currentBill.period}</p>
+                <h2 className="text-4xl font-bold mt-2">&#x20B1;{currentBill.amount}</h2>
+                {currentBill.due && <p className="text-primary-200 text-sm mt-1">Due: {currentBill.due}{currentBill.daysLeft ? ` (${currentBill.daysLeft} days remaining)` : ''}</p>}
+              </div>
+              <div className="bg-white/20 rounded-xl p-3">
+                <img src="/anteco.png" alt="ANTECO" className="w-8 h-8 brightness-0 invert" />
+              </div>
             </div>
+            <div className="flex gap-3 mt-6">
+              <Link to="/payments" className="bg-electric-400 text-black px-6 py-3 rounded-xl font-semibold hover:bg-electric-500 transition-all">Pay Now</Link>
+              <Link to="/billing" className="bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all">View Details</Link>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-4">
             <div className="bg-white/20 rounded-xl p-3">
-              <img src="/anteco.png" alt="ANTECO" className="w-8 h-8 brightness-0 invert" />
+              <Receipt className="w-8 h-8" />
+            </div>
+            <div>
+              <p className="text-primary-200 text-sm">Current Bill</p>
+              <p className="text-xl font-semibold mt-1">No bill yet</p>
+              <p className="text-primary-200 text-xs mt-1">Your current bill will appear here once available.</p>
             </div>
           </div>
-          <div className="flex gap-3 mt-6">
-            <Link to="/payments" className="bg-electric-400 text-black px-6 py-3 rounded-xl font-semibold hover:bg-electric-500 transition-all">Pay Now</Link>
-            <Link to="/billing" className="bg-white/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all">View Details</Link>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -193,29 +206,29 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat-card">
-          <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
-            <Zap className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          <div className={`p-3 rounded-xl ${currentBill ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <Zap className={`w-6 h-6 ${currentBill ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`} />
           </div>
           <div>
-            <p className="text-2xl font-bold">{stats.usage}</p>
+            <p className="text-2xl font-bold">{currentBill ? stats.usage : '0 kWh'}</p>
             <p className="text-sm text-gray-500">Current Month Usage</p>
           </div>
         </div>
         <div className="stat-card">
-          <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl">
-            <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <div className={`p-3 rounded-xl ${currentBill ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <TrendingUp className={`w-6 h-6 ${currentBill ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
           </div>
           <div>
-            <p className="text-2xl font-bold">{stats.rate}</p>
+            <p className="text-2xl font-bold">{currentBill ? stats.rate : '₱0.00/kWh'}</p>
             <p className="text-sm text-gray-500">Average Rate</p>
           </div>
         </div>
         <div className="stat-card">
-          <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
-            <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          <div className={`p-3 rounded-xl ${currentBill ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
+            <Clock className={`w-6 h-6 ${currentBill ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`} />
           </div>
           <div>
-            <p className="text-2xl font-bold">{stats.outages}</p>
+            <p className="text-2xl font-bold">0</p>
             <p className="text-sm text-gray-500">Active Outages</p>
           </div>
         </div>
@@ -247,12 +260,12 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Bills */}
-      {recentBills.length > 0 && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg">Recent Bills</h3>
-            <Link to="/billing" className="text-primary-500 text-sm hover:underline">View All</Link>
-          </div>
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg">Recent Bills</h3>
+          <Link to="/billing" className="text-primary-500 text-sm hover:underline">View All</Link>
+        </div>
+        {recentBills.length > 0 ? (
           <div className="space-y-3">
             {recentBills.map((bill, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
@@ -270,8 +283,14 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-10">
+            <Receipt className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">No bills yet</p>
+            <p className="text-xs text-gray-400 mt-1">Your billing history will show up here once available.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -76,18 +76,18 @@ const SEED_DATA = {
   ],
 };
 
-async function seedCollection(name, data) {
+const USER_SCOPED = ['billingStatements', 'consumptionData', 'payments', 'outageReports', 'serviceRequests', 'supportTickets'];
+
+async function seedCollection(name, data, userId) {
   const { db } = await import('./firebase.js');
   const { collection, addDoc, Timestamp } = await import('firebase/firestore');
 
   let count = 0;
   for (const item of data) {
     try {
-      await addDoc(collection(db, name), {
-        ...item,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
+      const docData = { ...item, createdAt: Timestamp.now(), updatedAt: Timestamp.now() };
+      if (USER_SCOPED.includes(name) && userId) docData.userId = userId;
+      await addDoc(collection(db, name), docData);
       count++;
     } catch (e) {
       console.warn(`  Failed to seed ${name}:`, e.message);
@@ -96,16 +96,20 @@ async function seedCollection(name, data) {
   console.log(`  Seeded ${count}/${data.length} ${name}`);
 }
 
-async function seedAll() {
+async function seedAll(userId) {
+  const uid = userId || (await import('./firebase.js')).auth?.currentUser?.uid;
+  if (!uid) {
+    console.error('You must be logged in to seed data. Pass userId or log in first.');
+    return;
+  }
   console.log('ANTECOConnect Dev Seeder');
-  console.log('Seeding Firestore with dummy data...\n');
+  console.log(`Seeding Firestore for user: ${uid}\n`);
 
   for (const [collectionName, data] of Object.entries(SEED_DATA)) {
-    await seedCollection(collectionName, data);
+    await seedCollection(collectionName, data, uid);
   }
 
   console.log('\nDone! Refresh the app to see seeded data.');
-  console.log('Demo user IDs: demo-consumer-1, demo-consumer-2');
 }
 
 // Make it available globally

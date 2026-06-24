@@ -72,15 +72,15 @@ const SEED_DATA = {
   ],
 };
 
-async function seedCollection(name, data) {
+const USER_SCOPED = ['billingStatements', 'consumptionData', 'payments', 'outageReports', 'serviceRequests', 'supportTickets'];
+
+async function seedCollection(name, data, userId) {
   let count = 0;
   for (const item of data) {
     try {
-      await addDoc(collection(db, name), {
-        ...item,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
+      const docData = { ...item, createdAt: Timestamp.now(), updatedAt: Timestamp.now() };
+      if (USER_SCOPED.includes(name) && userId) docData.userId = userId;
+      await addDoc(collection(db, name), docData);
       count++;
     } catch (e) {
       console.warn(`Failed to seed ${name}:`, e.message);
@@ -108,9 +108,10 @@ export default function Seed() {
     setSeeding(true);
     setError('');
     const res = [];
+    const userId = auth.currentUser?.uid;
     try {
       for (const [name, data] of Object.entries(SEED_DATA)) {
-        const count = await seedCollection(name, data);
+        const count = await seedCollection(name, data, userId);
         res.push({ name, count, total: data.length });
       }
       setResults(res);
