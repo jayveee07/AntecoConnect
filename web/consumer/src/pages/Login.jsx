@@ -5,6 +5,10 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthP
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+if (import.meta.env.DEV) {
+  auth.settings.appVerificationDisabledForTesting = true;
+}
+
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
   if (digits.startsWith('63') && digits.length >= 11) return '+' + digits;
