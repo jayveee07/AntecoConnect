@@ -5,6 +5,13 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthP
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
+const formatPhone = (val) => {
+  const digits = val.replace(/\D/g, '');
+  if (digits.startsWith('63') && digits.length >= 11) return '+' + digits;
+  if (digits.startsWith('0')) return '+63' + digits.slice(1);
+  return '+' + digits;
+};
+
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
 const Field = React.memo(({ name, label, type, placeholder, inputMode, value, onChange, required, minLength, disabled, pattern }) => (
@@ -170,13 +177,14 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const handleSendOtp = async (phone, userId) => {
     setSendingOtp(true);
     setError('');
+    const formatted = formatPhone(phone);
     try {
       setupRecaptcha();
       const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(phone, window.recaptchaVerifier);
+      const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
       setPhoneVerificationId(verificationId);
       setPhoneSent(true);
-      toast.success('OTP sent to ' + phone);
+      toast.success('OTP sent to ' + formatted);
     } catch (err) {
       if (err.code === 'auth/too-many-requests') {
         setError('Too many requests. Please try again later.');
@@ -208,7 +216,13 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await signInWithEmailAndPassword(auth, l.email, l.password);
+      const cred = await signInWithEmailAndPassword(auth, l.email, l.password);
+      const docSnap = await getDoc(doc(db, 'users', cred.user.uid));
+      if (!docSnap.exists()) {
+        await auth.signOut();
+        setError('Please complete phone verification first. Register again or contact support.');
+        return;
+      }
       navigate('/dashboard');
     } catch (err) {
       const m = err.code === 'auth/user-not-found' ? 'No account found with this email'
@@ -243,24 +257,9 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     setLoading(true); setError('');
     try {
       const cred = await createUserWithEmailAndPassword(auth, r.email, r.password);
-      const userId = cred.user.uid;
-      setCreatedUserId(userId);
-      await setDoc(doc(db, 'users', userId), {
-        uid: userId,
-        role: 'consumer',
-        first_name: r.first_name,
-        last_name: r.last_name,
-        email: r.email,
-        mobile_number: r.mobile_number,
-        isEmailVerified: false,
-        phoneVerified: false,
-        accountStatus: 'active',
-        is_verified: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      setCreatedUserId(cred.user.uid);
       setStep(3);
-      toast.success('Account created! Verify your phone to continue.');
+      toast.success('Almost there! Verify your phone to activate your account.');
     } catch (err) {
       const m = err.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
         : err.code === 'auth/weak-password' ? 'Password must be at least 6 characters'
@@ -306,29 +305,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     if (!g.mobile_number) {
       setError('Please provide your mobile number.'); return;
     }
-    setLoading(true); setError('');
-    try {
-      await setDoc(doc(db, 'users', googleProfile.uid), {
-        uid: googleProfile.uid,
-        role: 'consumer',
-        first_name: googleProfile.first_name,
-        last_name: googleProfile.last_name,
-        email: googleProfile.email,
-        mobile_number: g.mobile_number,
-        isEmailVerified: true,
-        phoneVerified: false,
-        accountStatus: 'active',
-        is_verified: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      setStep(2);
-      toast.success('Account created! Verify your phone to continue.');
-    } catch (err) {
-      setError(err.message || 'Failed to complete registration.');
-    } finally {
-      setLoading(false);
-    }
+    setStep(2);
   };
 
   const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); setCreatedUserId(null); setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); };
@@ -380,7 +357,20 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                 onVerifyOtp={async () => {
                   const ok = await handleVerifyOtp(r.mobile_number);
                   if (ok) {
-                    await updateDoc(doc(db, 'users', createdUserId), { phoneVerified: true, updatedAt: serverTimestamp() });
+                    await setDoc(doc(db, 'users', createdUserId), {
+                      uid: createdUserId,
+                      role: 'consumer',
+                      first_name: r.first_name,
+                      last_name: r.last_name,
+                      email: r.email,
+                      mobile_number: r.mobile_number,
+                      isEmailVerified: false,
+                      phoneVerified: true,
+                      accountStatus: 'active',
+                      is_verified: false,
+                      createdAt: serverTimestamp(),
+                      updatedAt: serverTimestamp(),
+                    });
                     navigate('/dashboard');
                   }
                 }}
@@ -396,7 +386,20 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                     onVerifyOtp={async () => {
                       const ok = await handleVerifyOtp(g.mobile_number);
                       if (ok) {
-                        await updateDoc(doc(db, 'users', googleProfile.uid), { phoneVerified: true, updatedAt: serverTimestamp() });
+                        await setDoc(doc(db, 'users', googleProfile.uid), {
+                          uid: googleProfile.uid,
+                          role: 'consumer',
+                          first_name: googleProfile.first_name,
+                          last_name: googleProfile.last_name,
+                          email: googleProfile.email,
+                          mobile_number: g.mobile_number,
+                          isEmailVerified: true,
+                          phoneVerified: true,
+                          accountStatus: 'active',
+                          is_verified: true,
+                          createdAt: serverTimestamp(),
+                          updatedAt: serverTimestamp(),
+                        });
                         navigate('/dashboard');
                       }
                     }}
