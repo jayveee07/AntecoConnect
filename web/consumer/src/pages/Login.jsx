@@ -5,7 +5,8 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthP
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
-if (import.meta.env.VITE_BYPASS_PHONE_VERIFICATION === 'true') {
+const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'true';
+if (!simulatedPhoneVerification) {
   auth.settings.appVerificationDisabledForTesting = true;
 }
 
@@ -150,6 +151,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [phoneSent, setPhoneSent] = React.useState(false);
   const [sendingOtp, setSendingOtp] = React.useState(false);
   const [verifyingOtp, setVerifyingOtp] = React.useState(false);
+  const [simulatedOtp, setSimulatedOtp] = React.useState('');
 
   React.useEffect(() => {
     const user = auth.currentUser;
@@ -183,12 +185,19 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     setError('');
     const formatted = formatPhone(phone);
     try {
-      setupRecaptcha();
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
-      setPhoneVerificationId(verificationId);
-      setPhoneSent(true);
-      toast.success('OTP sent to ' + formatted);
+      if (simulatedPhoneVerification) {
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        setSimulatedOtp(code);
+        setPhoneSent(true);
+        toast.success('Your OTP code: ' + code);
+      } else {
+        setupRecaptcha();
+        const provider = new PhoneAuthProvider(auth);
+        const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
+        setPhoneVerificationId(verificationId);
+        setPhoneSent(true);
+        toast.success('OTP sent to ' + formatted);
+      }
     } catch (err) {
       if (err.code === 'auth/too-many-requests') {
         setError('Too many requests. Please try again later.');
@@ -204,10 +213,20 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     setVerifyingOtp(true);
     setError('');
     try {
-      const credential = PhoneAuthProvider.credential(phoneVerificationId, phoneCode);
-      await linkWithCredential(auth.currentUser, credential);
-      toast.success('Phone number verified!');
-      return true;
+      if (simulatedPhoneVerification) {
+        if (phoneCode === simulatedOtp) {
+          toast.success('Phone number verified!');
+          return true;
+        } else {
+          setError('Invalid verification code');
+          return false;
+        }
+      } else {
+        const credential = PhoneAuthProvider.credential(phoneVerificationId, phoneCode);
+        await linkWithCredential(auth.currentUser, credential);
+        toast.success('Phone number verified!');
+        return true;
+      }
     } catch (err) {
       setError(err.message || 'Invalid verification code');
       return false;
