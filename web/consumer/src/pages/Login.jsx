@@ -7,13 +7,14 @@ import toast from 'react-hot-toast';
 
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
-const Field = ({ name, label, type, placeholder, value, onChange, required, minLength, disabled, pattern }) => (
+const Field = React.memo(({ name, label, type, placeholder, inputMode, value, onChange, required, minLength, disabled, pattern }) => (
   <div>
     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{label}</label>
-    <input name={name} type={type || 'text'} className={input + (value === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+    <input name={name} type={type || 'text'} inputMode={inputMode}
+      className={input + (value === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
       value={value} onChange={onChange} placeholder={placeholder} required={required} minLength={minLength} disabled={disabled} pattern={pattern} />
   </div>
-);
+), (prev, next) => prev.value === next.value && prev.name === next.name && prev.disabled === next.disabled);
 
 export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [searchParams] = useSearchParams();
@@ -298,7 +299,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         </SubmitBtn>
       ) : (
         <div className="space-y-4">
-          <Field name="phone_code" label="Enter OTP Code" placeholder="000000" value={phoneCode}
+          <Field name="phone_code" label="Enter OTP Code" type="text" inputMode="numeric" placeholder="000000" value={phoneCode}
             onChange={(e) => setPhoneCode(e.target.value)} required pattern="[0-9]{6}" />
           <div className="flex gap-3">
             <SubmitBtn onClick={async () => {
@@ -330,7 +331,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
       </div>
       {step === 1 && (
         <div className="space-y-4 animate-fade-in">
-          <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
+            <Field name="mobile_number" label="Mobile Number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" value={g.mobile_number} onChange={up(g, setG)} required />
           <SubmitBtn onClick={handleGoogleComplete} fullWidth>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
         </div>
       )}
@@ -410,7 +411,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                       <Field name="last_name" label="Last Name" placeholder="Dela Cruz" value={r.last_name} onChange={up(r, setR)} required />
                     </div>
                     <Field name="email" label="Email Address" type="email" placeholder="juan@email.com" value={r.email} onChange={up(r, setR)} required />
-                    <Field name="mobile_number" label="Mobile Number" type="tel" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
+                    <Field name="mobile_number" label="Mobile Number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" value={r.mobile_number} onChange={up(r, setR)} required />
                     <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
                   </div>
                 )}
