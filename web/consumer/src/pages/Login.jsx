@@ -16,6 +16,112 @@ const Field = React.memo(({ name, label, type, placeholder, inputMode, value, on
   </div>
 ), (prev, next) => prev.value === next.value && prev.name === next.name && prev.disabled === next.disabled);
 
+const Spinner = () => (
+  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+  </svg>
+);
+
+const Tab = ({ label, active, onSwitch }) => (
+  <button onClick={onSwitch}
+    className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${active ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+    {label}
+  </button>
+);
+
+const SubmitBtn = ({ onClick, children, secondary, fullWidth, type, disabled }) => (
+  <button type={type || (onClick ? 'button' : 'submit')} onClick={onClick}
+    className={`py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : 'flex-1'} ${secondary ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-primary-500 text-white hover:bg-primary-600 shadow-lg shadow-primary-500/25'}`}
+    disabled={disabled}>
+    {disabled ? <Spinner /> : null}
+    {children}
+  </button>
+);
+
+const GoogleBtn = ({ onClick, loading }) => (
+  <button type="button" onClick={onClick} disabled={loading}
+    className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm">
+    {loading ? <Spinner /> : (
+      <svg className="w-5 h-5" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+      </svg>
+    )}
+    {loading ? 'Connecting...' : 'Continue with Google'}
+  </button>
+);
+
+const MethodChoice = ({ mode, onGoogleLogin, googleLoading, onSetMethod }) => (
+  <div className="space-y-3">
+    <GoogleBtn onClick={onGoogleLogin} loading={googleLoading} />
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-white dark:bg-gray-900 px-3 text-gray-400 dark:text-gray-500">or</span>
+      </div>
+    </div>
+    <button onClick={() => onSetMethod('email')}
+      className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/30">
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+      Sign {mode === 'login' ? 'In' : 'Up'} with Email
+    </button>
+  </div>
+);
+
+const GoogleCompleteFormView = ({ step, googleProfile, mobileNumber, onMobileChange, onContinue, loading }) => (
+  <div className="space-y-4">
+    <div className="text-center mb-2">
+      <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        {step === 1 ? 'Enter your mobile number to continue' : 'Verify your phone number'}
+      </p>
+    </div>
+    {step === 1 && (
+      <div className="space-y-4 animate-fade-in">
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
+          <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
+            className={input + (mobileNumber === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+            value={mobileNumber} onChange={onMobileChange} />
+        </div>
+        <SubmitBtn onClick={onContinue} fullWidth disabled={loading}>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
+      </div>
+    )}
+  </div>
+);
+
+const PhoneVerifyView = ({ phone, userId, phoneSent, sendingOtp, phoneCode, onCodeChange, onSendOtp, onVerifyOtp, verifyingOtp, onResend }) => (
+  <div className="space-y-4 animate-fade-in">
+    <div className="text-center mb-2">
+      <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+      </div>
+      <p className="text-sm text-gray-500 dark:text-gray-400">Verify your mobile number</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">An OTP will be sent to {phone}</p>
+    </div>
+    {!phoneSent ? (
+      <SubmitBtn onClick={onSendOtp} fullWidth disabled={sendingOtp}>{sendingOtp ? 'Sending OTP...' : 'Send OTP'}</SubmitBtn>
+    ) : (
+      <div className="space-y-4">
+        <Field name="phone_code" label="Enter OTP Code" type="text" inputMode="numeric" placeholder="000000" value={phoneCode}
+          onChange={onCodeChange} required pattern="[0-9]{6}" />
+        <div className="flex gap-3">
+          <SubmitBtn onClick={onVerifyOtp} fullWidth disabled={verifyingOtp}>{verifyingOtp ? 'Verifying...' : 'Verify Phone'}</SubmitBtn>
+        </div>
+        <button type="button" onClick={onResend}
+          className="block mx-auto text-xs text-primary-500 hover:text-primary-600 font-semibold">
+          Resend OTP
+        </button>
+      </div>
+    )}
+  </div>
+);
+
 export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -227,122 +333,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); setCreatedUserId(null); setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); };
 
-  const Spinner = () => (
-    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-    </svg>
-  );
-
-  const Tab = ({ label }) => (
-    <button onClick={() => switchMode(label.toLowerCase())}
-      className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${mode === label.toLowerCase() ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}>
-      {label}
-    </button>
-  );
-
-  const SubmitBtn = ({ onClick, children, secondary, fullWidth, type }) => (
-    <button type={type || (onClick ? 'button' : 'submit')} onClick={onClick}
-      className={`py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : 'flex-1'} ${secondary ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-primary-500 text-white hover:bg-primary-600 shadow-lg shadow-primary-500/25'}`}
-      disabled={loading || sendingOtp || verifyingOtp}>
-      {(loading || sendingOtp || verifyingOtp) ? <Spinner /> : null}
-      {children}
-    </button>
-  );
-
-  const GoogleBtn = () => (
-    <button type="button" onClick={handleGoogleLogin} disabled={googleLoading}
-      className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 shadow-sm">
-      {googleLoading ? <Spinner /> : (
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-        </svg>
-      )}
-      {googleLoading ? 'Connecting...' : 'Continue with Google'}
-    </button>
-  );
-
-  const MethodChoice = () => (
-    <div className="space-y-3">
-      <GoogleBtn />
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200 dark:border-gray-700" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-gray-900 px-3 text-gray-400 dark:text-gray-500">or</span>
-        </div>
-      </div>
-      <button onClick={() => setMethod('email')}
-        className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/30">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-        Sign {mode === 'login' ? 'In' : 'Up'} with Email
-      </button>
-    </div>
-  );
-
-  const PhoneVerifyForm = ({ phone, userId }) => (
-    <div className="space-y-4 animate-fade-in">
-      <div className="text-center mb-2">
-        <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
-          <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-        </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Verify your mobile number</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">An OTP will be sent to {phone}</p>
-      </div>
-      {!phoneSent ? (
-        <SubmitBtn onClick={() => handleSendOtp(phone, userId)} fullWidth>
-          {sendingOtp ? 'Sending OTP...' : 'Send OTP'}
-        </SubmitBtn>
-      ) : (
-        <div className="space-y-4">
-          <Field name="phone_code" label="Enter OTP Code" type="text" inputMode="numeric" placeholder="000000" value={phoneCode}
-            onChange={(e) => setPhoneCode(e.target.value)} required pattern="[0-9]{6}" />
-          <div className="flex gap-3">
-            <SubmitBtn onClick={async () => {
-              const ok = await handleVerifyOtp(phone);
-              if (ok) {
-                await updateDoc(doc(db, 'users', userId), { phoneVerified: true, updatedAt: serverTimestamp() });
-                navigate('/dashboard');
-              }
-            }} fullWidth>
-              {verifyingOtp ? 'Verifying...' : 'Verify Phone'}
-            </SubmitBtn>
-          </div>
-          <button type="button" onClick={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }}
-            className="block mx-auto text-xs text-primary-500 hover:text-primary-600 font-semibold">
-            Resend OTP
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const GoogleCompleteForm = () => (
-    <div className="space-y-4">
-      <div className="text-center mb-2">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          {step === 1 ? 'Enter your mobile number to continue' : 'Verify your phone number'}
-        </p>
-      </div>
-      {step === 1 && (
-        <div className="space-y-4 animate-fade-in">
-            <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
-            <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
-              className={input + (g.mobile_number === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
-              value={g.mobile_number} onChange={(e) => setG(p => ({ ...p, mobile_number: e.target.value }))} />
-          </div>
-          <SubmitBtn onClick={handleGoogleComplete} fullWidth>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
-        </div>
-      )}
-      {step === 2 && <PhoneVerifyForm phone={g.mobile_number} userId={googleProfile.uid} />}
-    </div>
-  );
+  const isBusy = loading || sendingOtp || verifyingOtp;
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 relative">
@@ -369,7 +360,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-800 p-6 sm:p-8">
             {method !== 'google-complete' && step !== 3 && (
               <div className="flex mb-6 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1">
-                <Tab label="Login" /><Tab label="Register" />
+                <Tab label="Login" active={mode === 'login'} onSwitch={() => switchMode('login')} />
+                <Tab label="Register" active={mode === 'register'} onSwitch={() => switchMode('register')} />
               </div>
             )}
 
@@ -381,11 +373,44 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
             )}
 
             {step === 3 ? (
-              <PhoneVerifyForm phone={r.mobile_number} userId={createdUserId} />
+              <PhoneVerifyView phone={r.mobile_number} userId={createdUserId}
+                phoneSent={phoneSent} sendingOtp={sendingOtp}
+                phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
+                onSendOtp={() => handleSendOtp(r.mobile_number, createdUserId)}
+                onVerifyOtp={async () => {
+                  const ok = await handleVerifyOtp(r.mobile_number);
+                  if (ok) {
+                    await updateDoc(doc(db, 'users', createdUserId), { phoneVerified: true, updatedAt: serverTimestamp() });
+                    navigate('/dashboard');
+                  }
+                }}
+                verifyingOtp={verifyingOtp}
+                onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
             ) : method === 'google-complete' ? (
-              <GoogleCompleteForm />
+              <>
+                {step === 2 ? (
+                  <PhoneVerifyView phone={g.mobile_number} userId={googleProfile.uid}
+                    phoneSent={phoneSent} sendingOtp={sendingOtp}
+                    phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
+                    onSendOtp={() => handleSendOtp(g.mobile_number, googleProfile.uid)}
+                    onVerifyOtp={async () => {
+                      const ok = await handleVerifyOtp(g.mobile_number);
+                      if (ok) {
+                        await updateDoc(doc(db, 'users', googleProfile.uid), { phoneVerified: true, updatedAt: serverTimestamp() });
+                        navigate('/dashboard');
+                      }
+                    }}
+                    verifyingOtp={verifyingOtp}
+                    onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
+                ) : (
+                  <GoogleCompleteFormView step={step} googleProfile={googleProfile}
+                    mobileNumber={g.mobile_number}
+                    onMobileChange={(e) => setG(p => ({ ...p, mobile_number: e.target.value }))}
+                    onContinue={handleGoogleComplete} loading={loading} />
+                )}
+              </>
             ) : !method ? (
-              <MethodChoice />
+              <MethodChoice mode={mode} onGoogleLogin={handleGoogleLogin} googleLoading={googleLoading} onSetMethod={setMethod} />
             ) : method === 'email' && mode === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
@@ -401,7 +426,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                   </label>
                   <Link to="/forgot-password" className="text-xs text-primary-500 hover:text-primary-600 font-semibold">Forgot Password?</Link>
                 </div>
-                <SubmitBtn fullWidth>{loading ? 'Signing In...' : 'Sign In'}</SubmitBtn>
+                <SubmitBtn fullWidth disabled={isBusy}>{loading ? 'Signing In...' : 'Sign In'}</SubmitBtn>
               </form>
             ) : method === 'email' && mode === 'register' ? (
               <form onSubmit={handleRegister}>
@@ -422,7 +447,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                         className={input + (r.mobile_number === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
                         value={r.mobile_number} onChange={(e) => setR(p => ({ ...p, mobile_number: e.target.value }))} />
                     </div>
-                    <SubmitBtn onClick={() => goStep(2)} fullWidth>Next Step</SubmitBtn>
+                    <SubmitBtn onClick={() => goStep(2)} fullWidth disabled={isBusy}>Next Step</SubmitBtn>
                   </div>
                 )}
                 {step === 2 && (
@@ -430,8 +455,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                     <Field name="password" label="Password" type="password" placeholder="Min. 6 characters" value={r.password} onChange={up(r, setR)} required minLength={6} />
                     <Field name="password_confirmation" label="Confirm Password" type="password" placeholder="Repeat password" value={r.password_confirmation} onChange={up(r, setR)} required />
                     <div className="flex gap-3">
-                      <SubmitBtn onClick={() => setStep(1)} secondary>Back</SubmitBtn>
-                      <SubmitBtn>{loading ? 'Creating Account...' : 'Create Account'}</SubmitBtn>
+                      <SubmitBtn onClick={() => setStep(1)} secondary disabled={isBusy}>Back</SubmitBtn>
+                      <SubmitBtn disabled={isBusy}>{loading ? 'Creating Account...' : 'Create Account'}</SubmitBtn>
                     </div>
                   </div>
                 )}
