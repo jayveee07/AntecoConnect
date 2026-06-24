@@ -6,9 +6,6 @@ import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firest
 import toast from 'react-hot-toast';
 
 const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'false';
-if (!simulatedPhoneVerification) {
-  auth.settings.appVerificationDisabledForTesting = true;
-}
 
 const formatPhone = (val) => {
   const digits = val.replace(/\D/g, '');
@@ -172,11 +169,14 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
 
   const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
+    if (window.recaptchaVerifier) return;
+    try {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
         callback: () => {},
       });
+    } catch (e) {
+      console.error('RecaptchaVerifier init failed:', e);
     }
   };
 
