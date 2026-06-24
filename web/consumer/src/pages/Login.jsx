@@ -170,6 +170,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
 
   const setupRecaptcha = () => {
+    if (auth.settings.appVerificationDisabledForTesting) return;
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
@@ -185,7 +186,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     try {
       setupRecaptcha();
       const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
+      const verifier = auth.settings.appVerificationDisabledForTesting ? undefined : window.recaptchaVerifier;
+      const verificationId = await provider.verifyPhoneNumber(formatted, verifier);
       setPhoneVerificationId(verificationId);
       setPhoneSent(true);
       toast.success('OTP sent to ' + formatted);
