@@ -17,6 +17,33 @@ const stats = [
   { value: '50+', label: 'Service Areas' },
 ];
 
+const steps = [
+  { step: '01', title: 'Create Your Account', desc: 'Sign up with your name and email in under a minute. No hidden fees, no commitments.' },
+  { step: '02', title: 'Link Your Service', desc: 'Connect your electric service account using your CAN (Consumer Account Number) in seconds.' },
+  { step: '03', title: 'Manage Everything', desc: 'View bills, pay online, report outages, and track consumption — all from one dashboard.' },
+];
+
+const whyChoose = [
+  { icon: 'Shield', title: 'Secure & Private', desc: 'Industry-standard encryption protects your personal data and payment information.' },
+  { icon: 'Clock', title: 'Real-Time Updates', desc: 'Get instant notifications for bill due dates, outage status, and service updates.' },
+  { icon: 'Users', title: 'Member-Owned', desc: 'ANTECO is owned by the members we serve. Your satisfaction is our top priority.' },
+];
+
+function path(icon) {
+  const icons = {
+    Shield: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+    Clock: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+    Users: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    Zap: 'M13 10V3L4 14h7v7l9-11h-7z',
+    AlertTriangle: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z',
+    BarChart3: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    Headphones: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+    FileText: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    Smartphone: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
+  };
+  return icons[icon] || '';
+}
+
 export default function Landing() {
   const [faqOpen, setFaqOpen] = React.useState(null);
 
@@ -27,6 +54,8 @@ export default function Landing() {
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-40 right-1/4 w-4 h-4 bg-primary-300/40 rounded-full" />
+          <div className="absolute bottom-40 left-1/4 w-6 h-6 bg-primary-200/30 rounded-full" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
           <div className="max-w-3xl mx-auto text-center">
@@ -61,10 +90,32 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-gray-950 to-transparent" />
       </section>
 
-      <section className="py-20 sm:py-28">
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">Everything You Need</h2>
+            <span className="text-xs font-semibold text-primary-500 uppercase tracking-widest">How It Works</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-3 mb-4">Get Started in 3 Simple Steps</h2>
+            <p className="text-gray-500 dark:text-gray-400">Joining ANTECOConnect takes just minutes. Here is how to get started.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {steps.map((s) => (
+              <div key={s.step} className="relative text-center group">
+                <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-2xl font-bold text-primary-500">{s.step}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{s.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs mx-auto">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 sm:py-28 bg-gray-50 dark:bg-gray-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <span className="text-xs font-semibold text-primary-500 uppercase tracking-widest">Features</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-3 mb-4">Everything You Need</h2>
             <p className="text-gray-500 dark:text-gray-400">Manage your electric cooperative account from anywhere with ANTECOConnect.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -72,11 +123,34 @@ export default function Landing() {
               <div key={feature.title} className="group p-6 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800 bg-white dark:bg-gray-900 hover:shadow-lg hover:shadow-primary-500/5 transition-all duration-300">
                 <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon === 'Zap' ? 'M13 10V3L4 14h7v7l9-11h-7z' : feature.icon === 'AlertTriangle' ? 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z' : feature.icon === 'BarChart3' ? 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' : feature.icon === 'Headphones' ? 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z' : feature.icon === 'FileText' ? 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' : 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z'} />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={path(feature.icon)} />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mx-auto text-center mb-16">
+            <span className="text-xs font-semibold text-primary-500 uppercase tracking-widest">Why ANTECO</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-3 mb-4">Built for Your Peace of Mind</h2>
+            <p className="text-gray-500 dark:text-gray-400">We put our members first in everything we do.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {whyChoose.map((item) => (
+              <div key={item.title} className="text-center p-6">
+                <div className="w-14 h-14 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <svg className="w-7 h-7 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={path(item.icon)} />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -96,10 +170,11 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28">
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">Frequently Asked Questions</h2>
+            <span className="text-xs font-semibold text-primary-500 uppercase tracking-widest">FAQs</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-3 mb-4">Frequently Asked Questions</h2>
             <p className="text-gray-500 dark:text-gray-400">Quick answers to common questions about ANTECOConnect.</p>
           </div>
           <div className="max-w-3xl mx-auto space-y-3">
@@ -113,7 +188,7 @@ export default function Landing() {
               <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
                 <button onClick={() => setFaqOpen(faqOpen === i ? null : i)} className="w-full flex items-center justify-between px-6 py-4 text-left text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <span>{faq.q}</span>
-                  <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${faqOpen === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7'}" /></svg>
+                  <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${faqOpen === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 {faqOpen === i && (
                   <div className="px-6 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed animate-fade-in">{faq.a}</div>
@@ -127,10 +202,14 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 dark:from-primary-800 dark:to-gray-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-800 dark:from-primary-800 dark:to-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-primary-400/10 rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to Get Started?</h2>
-          <p className="text-primary-100 text-lg mb-10 max-w-xl mx-auto">Join thousands of ANTECO members managing their accounts online.</p>
+          <p className="text-primary-100 text-lg mb-10 max-w-xl mx-auto">Join thousands of ANTECO members managing their accounts online. It is free and takes just minutes.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/register" className="px-8 py-4 bg-white text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-all shadow-2xl shadow-black/20">
               Create Free Account
