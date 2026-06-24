@@ -6,7 +6,7 @@ export default function About() {
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-6">About ANTECO</h1>
       <div className="prose prose-gray dark:prose-invert max-w-none">
         <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed mb-8">
-          Antipolo Electric Cooperative, Inc. (ANTECO) is a member-owned electric cooperative serving the City of Antipolo and surrounding areas in Rizal Province, Philippines.
+          Antique Electric Cooperative (ANTECO) is a member-owned electric cooperative serving the Province of Antique, Philippines.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6">
@@ -38,7 +38,7 @@ export default function About() {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Service Areas</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          ANTECO serves the entire City of Antipolo and selected barangays in the neighboring municipalities of Rizal Province. Our service coverage continues to expand as we fulfill our commitment to bringing electricity to every household.
+          ANTECO serves the entire Province of Antique, bringing electricity to municipalities from San Jose de Buenavista to Pandan. Our service coverage continues to expand as we fulfill our commitment to bringing electricity to every household.
         </p>
       </div>
     </div>

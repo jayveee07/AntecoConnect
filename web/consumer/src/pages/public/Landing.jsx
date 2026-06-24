@@ -104,7 +104,7 @@ export default function Landing() {
           </div>
           <div className="max-w-3xl mx-auto space-y-3">
             {[
-              { q: 'What is ANTECOConnect?', a: 'ANTECOConnect is the official digital platform of ANTECO (Antipolo Electric Cooperative). It allows members to view bills, pay online, report outages, submit service requests, track consumption, and access support services.' },
+              { q: 'What is ANTECOConnect?', a: 'ANTECOConnect is the official digital platform of ANTECO. It allows members to view bills, pay online, report outages, submit service requests, track consumption, and access support services.' },
               { q: 'How do I create an account?', a: 'Click the "Get Started" button and fill out the registration form with your personal details and address. Once registered, you can link your electric service account using your account number.' },
               { q: 'Can I view and pay my bills through ANTECOConnect?', a: 'Yes. You can view your current and past billing statements, download PDF copies, and pay online through integrated payment methods including GCash and Maya.' },
               { q: 'How do I report a power outage?', a: 'Log in to your account, go to the Outages section, and click "Report Outage". Select the type of issue, provide the location and description, and submit. You will receive a reference number to track your report.' },

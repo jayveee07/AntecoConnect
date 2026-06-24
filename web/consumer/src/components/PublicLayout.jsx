@@ -78,7 +78,7 @@ export default function PublicLayout({ isDark, toggleTheme }) {
             <div className="md:col-span-2">
               <img src="/anteco.png" alt="ANTECO" className="h-10 mb-4" />
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
-                ANTECO (Antipolo Electric Cooperative) is committed to providing reliable and affordable electricity to the communities we serve. ANTECOConnect is your digital gateway to manage your account and access our services.
+                ANTECO is committed to providing reliable and affordable electricity to the communities of Antique. ANTECOConnect is your digital gateway to manage your account and access our services.
               </p>
             </div>
             <div>

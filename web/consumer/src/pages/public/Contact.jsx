@@ -1,10 +1,10 @@
 import React from 'react';
 
 const contactMethods = [
-  { icon: 'Phone', title: 'Hotline', value: '(02) 8532-1234', desc: 'Available Monday to Friday, 8:00 AM - 5:00 PM' },
-  { icon: 'Smartphone', title: 'Emergency Hotline', value: '(02) 8532-5678', desc: '24/7 for urgent outage and emergency reports' },
+  { icon: 'Phone', title: 'Hotline', value: '(036) 540-8001', desc: 'Available Monday to Friday, 8:00 AM - 5:00 PM' },
+  { icon: 'Smartphone', title: 'Emergency Hotline', value: '(036) 540-8002', desc: '24/7 for urgent outage and emergency reports' },
   { icon: 'Mail', title: 'Email', value: 'support@anteco.ph', desc: 'We respond within 24 hours' },
-  { icon: 'MapPin', title: 'Office Address', value: 'ANTECO Building, Sumulong Highway, Antipolo City', desc: 'Rizal Province, Philippines' },
+  { icon: 'MapPin', title: 'Office Address', value: 'ANTECO Building, San Jose de Buenavista', desc: 'Antique, Philippines' },
 ];
 
 export default function Contact() {

@@ -1,15 +1,15 @@
 import React from 'react';
 
 const scheduleData = [
-  { date: 'Jan 15, 2025', time: '9:00 AM - 2:00 PM', areas: ['Barangay San Isidro', 'Barangay Mayamot', 'Barangay Bagong Nayon'], reason: 'Line maintenance and upgrading' },
-  { date: 'Jan 20, 2025', time: '10:00 AM - 3:00 PM', areas: ['Barangay Sta. Cruz', 'Barangay Dalig'], reason: 'Transformer replacement' },
-  { date: 'Feb 5, 2025', time: '8:00 AM - 1:00 PM', areas: ['Barangay Munting Dilao', 'Barangay Cupang'], reason: 'Feeder maintenance' },
-  { date: 'Feb 12, 2025', time: '1:00 PM - 5:00 PM', areas: ['Barangay Dela Paz', 'Barangay San Jose'], reason: 'Pole replacement and line clearing' },
+  { date: 'Jan 15, 2025', time: '9:00 AM - 2:00 PM', areas: ['Brgy. Funda', 'Brgy. Supa', 'Brgy. 4'], city: 'San Jose de Buenavista', reason: 'Line maintenance and upgrading' },
+  { date: 'Jan 20, 2025', time: '10:00 AM - 3:00 PM', areas: ['Brgy. San Angel', 'Brgy. Astorga'], city: 'Sibalom', reason: 'Transformer replacement' },
+  { date: 'Feb 5, 2025', time: '8:00 AM - 1:00 PM', areas: ['Brgy. Igbaclag', 'Brgy. Bongbongan'], city: 'Hamtic', reason: 'Feeder maintenance' },
+  { date: 'Feb 12, 2025', time: '1:00 PM - 5:00 PM', areas: ['Brgy. Culasi', 'Brgy. San Jose'], city: 'Sibalom', reason: 'Pole replacement and line clearing' },
 ];
 
 const emergencyData = [
-  { status: 'ongoing', title: 'Emergency Line Repair - Barangay Mayamot', desc: 'Our team is working to restore power in portions of Barangay Mayamot due to a damaged primary line caused by a vehicular accident. Estimated restoration: within 4 hours.', updated: 'Updated 2 hours ago' },
-  { status: 'resolved', title: 'Transformer Issue - Barangay San Isidro (Resolved)', desc: 'Power has been fully restored in Barangay San Isidro after a faulty transformer was replaced. Restoration time: 3:45 PM.', updated: 'Resolved yesterday' },
+  { status: 'ongoing', title: 'Emergency Line Repair - Brgy. Funda', desc: 'Our team is working to restore power in portions of Brgy. Funda, San Jose de Buenavista due to a damaged primary line caused by a vehicular accident. Estimated restoration: within 4 hours.', updated: 'Updated 2 hours ago' },
+  { status: 'resolved', title: 'Transformer Issue - Brgy. San Angel (Resolved)', desc: 'Power has been fully restored in Brgy. San Angel, Sibalom after a faulty transformer was replaced. Restoration time: 3:45 PM.', updated: 'Resolved yesterday' },
 ];
 
 export default function Interruptions() {

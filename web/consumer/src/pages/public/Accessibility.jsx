@@ -28,8 +28,8 @@ export default function Accessibility() {
         <p>If you encounter any accessibility barriers while using ANTECOConnect, or if you need assistance accessing any content or feature, please contact us:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>Email: accessibility@anteco.ph</li>
-          <li>Phone: (02) 8532-1234</li>
-          <li>Visit our office at ANTECO Building, Sumulong Highway, Antipolo City</li>
+          <li>Phone: (036) 540-8001</li>
+          <li>Visit our office at ANTECO Building, San Jose de Buenavista, Antique</li>
         </ul>
       </div>
     </div>

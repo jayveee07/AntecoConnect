@@ -5,9 +5,16 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 const SEED_DATA = {
   consumers: [
-    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 P. Burgos St., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
-    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 M.L. Quezon St., Mayamot', barangay: 'Mayamot', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
-    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Rizal Ave., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 Mabini St., Brgy. 5', barangay: 'Brgy. 5', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 Rizal St., Brgy. San Angel', barangay: 'San Angel', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Quezon Ave., Brgy. Igbaclag', barangay: 'Igbaclag', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0004', ownerName: 'Ana Gonzales', address: '321 Bonifacio St., Brgy. Funda', barangay: 'Funda', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1004', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0005', ownerName: 'Jose Rizal II', address: '555 National Rd., Brgy. Astorga', barangay: 'Astorga', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1005', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0006', ownerName: 'Linda Mercado', address: '888 Dela Cruz St., Brgy. Bongbongan', barangay: 'Bongbongan', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1006', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0007', ownerName: 'Antonio Villanueva', address: '12 Lakeview Drive, Brgy. 4', barangay: 'Brgy. 4', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1007', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0008', ownerName: 'Cristina Lopez', address: '76 Lopez Jaena St., Brgy. Culasi', barangay: 'Culasi', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1008', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0009', ownerName: 'Ramon Fernandez', address: '90 Gomez St., Brgy. San Jose', barangay: 'San Jose', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1009', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0010', ownerName: 'Sofia Morales', address: '234 Luna St., Brgy. Supa', barangay: 'Supa', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1010', rateType: 'commercial', status: 'active' },
   ],
   billingStatements: [
     { billNumber: 'BILL-2025-06-001', billingPeriod: 'Jun 2025', dueDate: '2025-07-15', kwh: 245, consumptionKwh: 245, totalAmountDue: 2540.75, amountPaid: 0, balance: 2540.75, status: 'unpaid', readingDays: 30, ratePerKwh: 8.50 },
@@ -40,8 +47,8 @@ const SEED_DATA = {
     { amount: 3629.50, paymentMethod: 'gcash', referenceNumber: 'GC-202506-002', status: 'confirmed' },
   ],
   outageReports: [
-    { ticketNumber: 'OUT-DEMO-001', type: 'power_outage', address: '123 P. Burgos St., San Isidro', description: 'No power since 2pm', status: 'resolved', priority: 'high', updates: [{ status: 'reported', timestamp: new Date(Date.now() - 86400000).toISOString(), note: 'Outage reported' }, { status: 'resolved', timestamp: new Date().toISOString(), note: 'Power restored' }] },
-    { ticketNumber: 'OUT-DEMO-002', type: 'low_voltage', address: '456 M.L. Quezon St., Mayamot', description: 'Lights are dim', status: 'in_progress', priority: 'medium', updates: [{ status: 'reported', timestamp: new Date(Date.now() - 7200000).toISOString(), note: 'Low voltage reported' }, { status: 'in_progress', timestamp: new Date().toISOString(), note: 'Technician dispatched' }] },
+    { ticketNumber: 'OUT-DEMO-001', type: 'power_outage', address: '123 Mabini St., Brgy. 5, San Jose de Buenavista', description: 'No power since 2pm', status: 'resolved', priority: 'high', updates: [{ status: 'reported', timestamp: new Date(Date.now() - 86400000).toISOString(), note: 'Outage reported' }, { status: 'resolved', timestamp: new Date().toISOString(), note: 'Power restored' }] },
+    { ticketNumber: 'OUT-DEMO-002', type: 'low_voltage', address: '456 Rizal St., Brgy. San Angel, Sibalom', description: 'Lights are dim', status: 'in_progress', priority: 'medium', updates: [{ status: 'reported', timestamp: new Date(Date.now() - 7200000).toISOString(), note: 'Low voltage reported' }, { status: 'in_progress', timestamp: new Date().toISOString(), note: 'Technician dispatched' }] },
   ],
   serviceRequests: [
     { requestNumber: 'SR-DEMO-001', type: 'new_connection', status: 'completed', updates: [{ status: 'completed', timestamp: new Date().toISOString(), note: 'Completed' }] },
@@ -53,8 +60,8 @@ const SEED_DATA = {
     { ticketNumber: 'TKT-DEMO-002', category: 'technical_issue', subject: 'Meter issue', description: 'My meter stopped spinning a few days ago.', status: 'open', priority: 'high', messages: [{ userId: 'you', message: 'My meter stopped spinning.', isStaffReply: false, timestamp: new Date().toISOString() }] },
   ],
   plannedInterruptions: [
-    { title: 'Line Maintenance - San Isidro', type: 'scheduled', description: 'Routine line maintenance and tree trimming along P. Burgos St.', affectedAreas: ['San Isidro'], status: 'upcoming', isActive: true, startTime: new Date(Date.now() + 86400000 * 7).toISOString(), endTime: new Date(Date.now() + 86400000 * 7 + 3600000 * 5).toISOString(), reason: 'Line maintenance and tree clearing' },
-    { title: 'Transformer Replacement - Mayamot', type: 'scheduled', description: 'Replacing old transformer to improve service reliability.', affectedAreas: ['Mayamot'], status: 'upcoming', isActive: true, startTime: new Date(Date.now() + 86400000 * 14).toISOString(), endTime: new Date(Date.now() + 86400000 * 14 + 3600000 * 5).toISOString(), reason: 'Transformer upgrade' },
+    { title: 'Line Maintenance - Brgy. Funda', type: 'scheduled', description: 'Routine line maintenance and tree trimming along Mabini St.', affectedAreas: ['Brgy. Funda'], status: 'upcoming', isActive: true, startTime: new Date(Date.now() + 86400000 * 7).toISOString(), endTime: new Date(Date.now() + 86400000 * 7 + 3600000 * 5).toISOString(), reason: 'Line maintenance and tree clearing' },
+    { title: 'Transformer Replacement - Brgy. San Angel', type: 'scheduled', description: 'Replacing old transformer to improve service reliability.', affectedAreas: ['Brgy. San Angel'], status: 'upcoming', isActive: true, startTime: new Date(Date.now() + 86400000 * 14).toISOString(), endTime: new Date(Date.now() + 86400000 * 14 + 3600000 * 5).toISOString(), reason: 'Transformer upgrade' },
   ],
   announcements: [
     { title: 'Welcome to ANTECOConnect!', type: 'general', content: 'Your digital gateway to manage your electric cooperative account. View bills, report outages, track consumption, and access services all in one place.', isActive: true, priority: 'high' },

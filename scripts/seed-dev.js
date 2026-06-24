@@ -11,9 +11,16 @@
 
 const SEED_DATA = {
   consumers: [
-    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 P. Burgos St., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
-    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 M.L. Quezon St., Mayamot', barangay: 'Mayamot', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
-    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Rizal Ave., San Isidro', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zipCode: '1870', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0001', ownerName: 'Juan Dela Cruz', address: '123 Mabini St., Brgy. 5', barangay: 'Brgy. 5', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1001', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0002', ownerName: 'Maria Santos', address: '456 Rizal St., Brgy. San Angel', barangay: 'San Angel', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1002', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0003', ownerName: 'Pedro Reyes', address: '789 Quezon Ave., Brgy. Igbaclag', barangay: 'Igbaclag', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1003', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0004', ownerName: 'Ana Gonzales', address: '321 Bonifacio St., Brgy. Funda', barangay: 'Funda', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1004', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0005', ownerName: 'Jose Rizal II', address: '555 National Rd., Brgy. Astorga', barangay: 'Astorga', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1005', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0006', ownerName: 'Linda Mercado', address: '888 Dela Cruz St., Brgy. Bongbongan', barangay: 'Bongbongan', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1006', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0007', ownerName: 'Antonio Villanueva', address: '12 Lakeview Drive, Brgy. 4', barangay: 'Brgy. 4', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1007', rateType: 'commercial', status: 'active' },
+    { can: 'ANT-2025-0008', ownerName: 'Cristina Lopez', address: '76 Lopez Jaena St., Brgy. Culasi', barangay: 'Culasi', city: 'Sibalom', province: 'Antique', zipCode: '5713', meterNumber: 'MTR-1008', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0009', ownerName: 'Ramon Fernandez', address: '90 Gomez St., Brgy. San Jose', barangay: 'San Jose', city: 'Hamtic', province: 'Antique', zipCode: '5715', meterNumber: 'MTR-1009', rateType: 'residential', status: 'active' },
+    { can: 'ANT-2025-0010', ownerName: 'Sofia Morales', address: '234 Luna St., Brgy. Supa', barangay: 'Supa', city: 'San Jose de Buenavista', province: 'Antique', zipCode: '5700', meterNumber: 'MTR-1010', rateType: 'commercial', status: 'active' },
   ],
   users: [
     { uid: 'demo-consumer-1', role: 'consumer', first_name: 'Juan', last_name: 'Dela Cruz', email: 'juan@anteco.ph', mobile_number: '09171234567', address_line1: '123 P. Burgos St.', barangay: 'San Isidro', city: 'Antipolo City', province: 'Rizal', zip_code: '1870', isEmailVerified: true, accountStatus: 'active', is_verified: true },

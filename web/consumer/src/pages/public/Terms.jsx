@@ -34,7 +34,7 @@ export default function Terms() {
         <p>We reserve the right to modify these terms at any time. We will notify users of material changes through the platform or via email. Continued use after changes constitutes acceptance of the updated terms.</p>
 
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-8 mb-3">Contact</h2>
-        <p>For questions about these Terms and Conditions, please contact us at support@anteco.ph or visit our office at ANTECO Building, Sumulong Highway, Antipolo City.</p>
+        <p>For questions about these Terms and Conditions, please contact us at support@anteco.ph or visit our office at ANTECO Building, San Jose de Buenavista, Antique.</p>
       </div>
     </div>
   );

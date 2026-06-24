@@ -6,7 +6,7 @@ export default function Privacy() {
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-6">Privacy Policy</h1>
       <div className="prose prose-gray dark:prose-invert max-w-none text-sm text-gray-600 dark:text-gray-400 space-y-6 leading-relaxed">
         <p>Last updated: January 2025</p>
-        <p>ANTECO (Antipolo Electric Cooperative, Inc.) respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use ANTECOConnect.</p>
+        <p>ANTECO respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use ANTECOConnect.</p>
 
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-8 mb-3">Information We Collect</h2>
         <p>We collect information you provide directly to us, including:</p>
@@ -46,7 +46,7 @@ export default function Privacy() {
         </ul>
 
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-8 mb-3">Contact Us</h2>
-        <p>If you have questions about this Privacy Policy or wish to exercise your data privacy rights, please contact our Data Protection Officer at privacy@anteco.ph or visit our office at ANTECO Building, Sumulong Highway, Antipolo City.</p>
+        <p>If you have questions about this Privacy Policy or wish to exercise your data privacy rights, please contact our Data Protection Officer at privacy@anteco.ph or visit our office at ANTECO Building, San Jose de Buenavista, Antique.</p>
       </div>
     </div>
   );
