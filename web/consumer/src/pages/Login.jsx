@@ -368,33 +368,45 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
               </div>
             )}
 
-            {step === 3 ? (
-              <PhoneVerifyView phone={r.mobile_number} userId={createdUserId}
-                phoneSent={phoneSent} sendingOtp={sendingOtp}
-                phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
-                onSendOtp={() => handleSendOtp(r.mobile_number, createdUserId)}
-                onVerifyOtp={async () => {
-                  const ok = await handleVerifyOtp(r.mobile_number);
-                  if (ok) {
-                    await setDoc(doc(db, 'users', createdUserId), {
-                      uid: createdUserId,
-                      role: 'consumer',
-                      first_name: r.first_name,
-                      last_name: r.last_name,
-                      email: r.email,
-                      mobile_number: r.mobile_number,
-                      isEmailVerified: false,
-                      phoneVerified: true,
-                      accountStatus: 'active',
-                      is_verified: false,
-                      createdAt: serverTimestamp(),
-                      updatedAt: serverTimestamp(),
-                    });
-                    navigate('/dashboard');
-                  }
-                }}
-                verifyingOtp={verifyingOtp}
-                onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
+              {step === 3 && (
+                <>
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    {[1, 2, 3].map((s) => (
+                      <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
+                    ))}
+                  </div>
+                  <PhoneVerifyView phone={r.mobile_number} userId={createdUserId}
+                    phoneSent={phoneSent} sendingOtp={sendingOtp}
+                    phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
+                    onSendOtp={() => handleSendOtp(r.mobile_number, createdUserId)}
+                    onVerifyOtp={async () => {
+                      const ok = await handleVerifyOtp(r.mobile_number);
+                      if (ok) {
+                        await setDoc(doc(db, 'users', createdUserId), {
+                          uid: createdUserId,
+                          role: 'consumer',
+                          first_name: r.first_name,
+                          last_name: r.last_name,
+                          email: r.email,
+                          mobile_number: r.mobile_number,
+                          phoneNumber: r.mobile_number,
+                          isEmailVerified: false,
+                          phoneVerified: true,
+                          accountStatus: 'active',
+                          is_verified: false,
+                          createdAt: serverTimestamp(),
+                          updatedAt: serverTimestamp(),
+                        });
+                        navigate('/dashboard');
+                      } else {
+                        try { await auth.currentUser?.delete(); } catch (_) {}
+                        setError('Phone verification failed. Please try registering again.');
+                      }
+                    }}
+                    verifyingOtp={verifyingOtp}
+                    onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
+                </>
+              )
             ) : method === 'google-complete' ? (
               <>
                 {step === 2 ? (
@@ -412,6 +424,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                           last_name: googleProfile.last_name,
                           email: googleProfile.email,
                           mobile_number: g.mobile_number,
+                          phoneNumber: g.mobile_number,
                           isEmailVerified: true,
                           phoneVerified: true,
                           accountStatus: 'active',
@@ -420,6 +433,9 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                           updatedAt: serverTimestamp(),
                         });
                         navigate('/dashboard');
+                      } else {
+                        try { await auth.currentUser?.delete(); } catch (_) {}
+                        setError('Phone verification failed.');
                       }
                     }}
                     verifyingOtp={verifyingOtp}
@@ -482,11 +498,13 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center justify-center gap-2 mt-6">
-                  {[1, 2, 3].map((s) => (
-                    <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
-                  ))}
-                </div>
+                {step < 3 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    {[1, 2, 3].map((s) => (
+                      <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
+                    ))}
+                  </div>
+                )}
               </form>
             ) : null}
           </div>
