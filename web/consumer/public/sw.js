@@ -2,6 +2,8 @@ const CACHE = 'anteco-v1';
 const ASSETS = [
   '/',
   '/anteco.png',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
   '/manifest.json',
 ];
 
