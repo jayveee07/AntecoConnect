@@ -34,6 +34,47 @@ export default function Dashboard() {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
+  const loadDashboard = React.useCallback(async (acct) => {
+    setLoading(true);
+    try {
+      const dashboardData = await dashboardService.getAll(acct?.id);
+      if (dashboardData.user) setUser(dashboardData.user);
+      if (dashboardData.currentBill) {
+        const b = dashboardData.currentBill;
+        setCurrentBill({
+          period: b.billingPeriod || b.billing_period || 'Current',
+          amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+          due: b.dueDate || b.due_date || '',
+          daysLeft: b.daysUntilDue || b.days_until_due || 0,
+        });
+      } else {
+        setCurrentBill(null);
+      }
+      if (dashboardData.bills?.length) {
+        setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
+          period: b.billingPeriod || b.billing_period || '',
+          kwh: b.kwh || b.consumptionKwh || 0,
+          amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
+          status: b.status || 'unknown',
+        })));
+      } else {
+        setRecentBills([]);
+      }
+      if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
+
+      const consumptionResult = await consumptionService.getConsumption();
+      if (consumptionResult?.monthly?.length) {
+        const mapped = consumptionResult.monthly.map((c) => ({
+          month: c.periodMonth || c.period_month || (() => { const d = new Date(); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(d.getMonth()) % 12]; })(),
+          kwh: c.consumptionKwh || c.consumption_kwh || 0,
+        }));
+        setConsumption(mapped);
+      }
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     const init = async () => {
       const u = auth.currentUser;
@@ -42,45 +83,21 @@ export default function Dashboard() {
         const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
         const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setAccounts(accts);
-        if (accts.length > 0) setSelectedAccount(accts[0]);
-
         if (accts.length > 0) {
-          const dashboardData = await dashboardService.getAll();
-          if (dashboardData.user) setUser(dashboardData.user);
-          if (dashboardData.currentBill) {
-            const b = dashboardData.currentBill;
-            setCurrentBill({
-              period: b.billingPeriod || b.billing_period || 'Current',
-              amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
-              due: b.dueDate || b.due_date || '',
-              daysLeft: b.daysUntilDue || b.days_until_due || 0,
-            });
-          }
-          if (dashboardData.bills?.length) {
-            setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
-              period: b.billingPeriod || b.billing_period || '',
-              kwh: b.kwh || b.consumption_kwh || 0,
-              amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
-              status: b.status || 'unknown',
-            })));
-          }
-          if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
+          setSelectedAccount(accts[0]);
+        } else {
+          setLoading(false);
         }
-
-        const consumptionResult = await consumptionService.getConsumption();
-        if (consumptionResult?.monthly?.length) {
-          const mapped = consumptionResult.monthly.map((c) => ({
-            month: c.periodMonth || c.period_month || (() => { const d = new Date(); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(d.getMonth()) % 12]; })(),
-            kwh: c.consumptionKwh || c.consumption_kwh || 0,
-          }));
-          setConsumption(mapped);
-        }
-      } catch {} finally {
+      } catch {
         setLoading(false);
       }
     };
     init();
-  }, []);
+  }, [loadDashboard]);
+
+  React.useEffect(() => {
+    if (selectedAccount) loadDashboard(selectedAccount);
+  }, [selectedAccount, loadDashboard]);
 
   const quickActions = [
     { icon: Wallet, label: 'Pay Bill', path: '/payments', color: 'bg-green-500' },

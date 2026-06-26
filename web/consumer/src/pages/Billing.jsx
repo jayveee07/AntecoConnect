@@ -19,16 +19,13 @@ export default function Billing() {
     setLoading(true);
     try {
       const accountId = acct?.id || null;
-      console.log('[Billing] Fetching for account:', accountId, acct);
       const [curRes, allRes] = await Promise.allSettled([
         billingService.getCurrentBill(accountId),
         billingService.getBills(accountId),
       ]);
-      console.log('[Billing] getCurrentBill result:', curRes);
-      console.log('[Billing] getBills result:', allRes);
       if (curRes.status === 'fulfilled') setCurrentBill(curRes.value);
       if (allRes.status === 'fulfilled') setBills(allRes.value || []);
-    } catch (e) { console.error('[Billing] fetch error:', e); } finally {
+    } catch {} finally {
       setLoading(false);
     }
   }, []);

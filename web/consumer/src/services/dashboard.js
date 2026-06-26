@@ -2,21 +2,17 @@ import { auth, db } from '../firebase';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export const dashboardService = {
-  getAll: async () => {
+  getAll: async (accountId) => {
     const user = auth.currentUser;
     if (!user) return {};
 
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data() || {};
 
-    const linkSnap = await getDoc(doc(db, 'LinkAccounts', user.uid));
-    const accounts = linkSnap.exists() ? (linkSnap.data().accounts || []) : [];
-    const accountNumbers = accounts.map((a) => a.accountNumber).filter(Boolean);
-
     let bills = [];
-    if (accountNumbers.length > 0) {
+    if (accountId) {
       const snap = await getDocs(
-        query(collection(db, 'billingStatements'), where('consumerAccountId', 'in', accountNumbers))
+        query(collection(db, 'billingStatements'), where('consumerAccountId', '==', accountId))
       );
       bills = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => new Date(b.createdAt?.toDate?.() || b.createdAt || 0) - new Date(a.createdAt?.toDate?.() || a.createdAt || 0))
