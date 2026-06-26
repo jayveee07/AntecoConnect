@@ -229,11 +229,11 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
 
             {/* Mobile nav */}
             <nav className="md:hidden flex items-center gap-1 overflow-x-auto scrollbar-none">
-              {allItems.map((item) => (
+              {allItems.slice(0, 3).map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
                     location.pathname === item.path
                       ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400'
                       : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -243,8 +243,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                   <span>{item.label}</span>
                 </Link>
               ))}
-
-              <div ref={mobileRef}>
+              <div ref={mobileRef} className="shrink-0">
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
@@ -286,7 +285,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute right-4 top-0 mt-1" onClick={(e) => e.stopPropagation()}>
             <MoreDropdown
-              items={overflow.length > 0 ? overflow : allItems}
+              items={allItems.slice(3)}
               isActive={(p) => location.pathname === p}
               onClose={() => setMoreOpen(false)}
             />
