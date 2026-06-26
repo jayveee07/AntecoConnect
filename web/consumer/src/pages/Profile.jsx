@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -18,6 +19,7 @@ function ProfileField({ icon: Icon, label, value }) {
 }
 
 export default function Profile({ onLogout }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [editing, setEditing] = React.useState(false);
@@ -42,9 +44,6 @@ export default function Profile({ onLogout }) {
   });
 
   const [linkedAccounts, setLinkedAccounts] = React.useState([]);
-  const [showAddAccount, setShowAddAccount] = React.useState(false);
-  const [newAccountNumber, setNewAccountNumber] = React.useState('');
-  const [addingAccount, setAddingAccount] = React.useState(false);
   const [accountsLoading, setAccountsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -133,54 +132,6 @@ export default function Profile({ onLogout }) {
       toast.error(err.response?.data?.message || 'Failed to change password');
     } finally {
       setPassLoading(false);
-    }
-  };
-
-  const handleAddAccount = async () => {
-    if (!newAccountNumber.trim()) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    setAddingAccount(true);
-    try {
-      const can = newAccountNumber.trim().toUpperCase();
-      const linkRef = doc(db, 'linkAccounts', user.uid);
-      const linkSnap = await getDoc(linkRef);
-      const existingAccounts = linkSnap.exists() ? linkSnap.data().accounts || [] : [];
-
-      if (existingAccounts.some((a) => a.accountNumber === can)) {
-        toast.error('This account is already linked');
-        setAddingAccount(false);
-        return;
-      }
-
-      const consumerQuery = query(collection(db, 'consumers'), where('can', '==', can));
-      const consumerSnap = await getDocs(consumerQuery);
-
-      if (consumerSnap.empty) {
-        toast.error('Account number not found in ANTECO records');
-        setAddingAccount(false);
-        return;
-      }
-
-      const consumer = consumerSnap.docs[0].data();
-
-      const newAccount = {
-        accountNumber: can,
-        accountName: consumer.ownerName,
-        status: 'active',
-        consumerId: consumerSnap.docs[0].id,
-        linkedAt: new Date().toISOString(),
-      };
-
-      await setDoc(linkRef, { accounts: arrayUnion(newAccount) }, { merge: true });
-      setLinkedAccounts([...linkedAccounts, { id: can, ...newAccount }]);
-      setNewAccountNumber('');
-      setShowAddAccount(false);
-      toast.success('Account linked successfully');
-    } catch {
-      toast.error('Failed to link account');
-    } finally {
-      setAddingAccount(false);
     }
   };
 
@@ -415,7 +366,7 @@ export default function Profile({ onLogout }) {
         <div className="card space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">Linked Electric Accounts</h3>
-            <button onClick={() => setShowAddAccount(true)} className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 font-semibold">
+            <button onClick={() => navigate('/add-account')} className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 font-semibold">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Add Account
             </button>
@@ -432,7 +383,7 @@ export default function Profile({ onLogout }) {
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No linked accounts yet</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">Link your electric service account to manage bills and services.</p>
-              <button onClick={() => setShowAddAccount(true)} className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">Link Your First Account</button>
+              <button onClick={() => navigate('/add-account')} className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">Link Your First Account</button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -462,27 +413,6 @@ export default function Profile({ onLogout }) {
             </div>
           )}
 
-          {showAddAccount && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowAddAccount(false)}>
-              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-                <h4 className="text-lg font-semibold mb-4">Link Account</h4>
-                <p className="text-sm text-gray-500 mb-4">Enter your ANTECO account number to link it to your profile.</p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Account Number</label>
-                    <input className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all" placeholder="Enter your account number" value={newAccountNumber} onChange={(e) => setNewAccountNumber(e.target.value)} />
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => setShowAddAccount(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">Cancel</button>
-                    <button onClick={handleAddAccount} disabled={addingAccount || !newAccountNumber.trim()} className="flex-1 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                      {addingAccount && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />}
-                      {addingAccount ? 'Linking...' : 'Link Account'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
