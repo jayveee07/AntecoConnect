@@ -25,7 +25,7 @@ export default function Billing() {
       ]);
       if (curRes.status === 'fulfilled') setCurrentBill(curRes.value);
       if (allRes.status === 'fulfilled') setBills(allRes.value || []);
-    } catch {} finally {
+    } catch (e) { console.error('Billing fetch error:', e); } finally {
       setLoading(false);
     }
   }, []);
