@@ -20,7 +20,7 @@ export default function PublicLayout({ children, isDark, toggleTheme }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/anteco.png" alt="ANTECO" className="h-9" />
+              <div className="bg-white rounded-lg p-0.5 inline-flex"><img src="/anteco.png" alt="ANTECO" className="h-8 rounded-[7px]" /></div>
               <span className="hidden sm:block text-lg font-bold text-gray-900 dark:text-white">ANTECO<span className="text-primary-500">Connect</span></span>
             </Link>
 
@@ -76,7 +76,7 @@ export default function PublicLayout({ children, isDark, toggleTheme }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <img src="/anteco.png" alt="ANTECO" className="h-10 mb-4" />
+              <div className="bg-white rounded-xl p-1 mb-4 inline-flex"><img src="/anteco.png" alt="ANTECO" className="h-8 rounded-lg" /></div>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-md">
                 ANTECO is committed to providing reliable and affordable electricity to the communities of Antique. ANTECOConnect is your digital gateway to manage your account and access our services.
               </p>
