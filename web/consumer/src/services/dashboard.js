@@ -5,21 +5,29 @@ export const dashboardService = {
   getAll: async (accountId) => {
     const user = auth.currentUser;
     if (!user) return {};
+    console.log('[dashboardService.getAll] accountId:', accountId);
 
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data() || {};
 
     let bills = [];
     if (accountId) {
+      console.log('[dashboardService.getAll] querying billingStatements for consumerAccountId:', accountId);
       const snap = await getDocs(
         query(collection(db, 'billingStatements'), where('consumerAccountId', '==', accountId))
       );
+      console.log('[dashboardService.getAll] snap size:', snap.size);
+      snap.docs.forEach(d => console.log('[dashboardService.getAll] doc:', d.id, d.data()));
       bills = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => new Date(b.createdAt?.toDate?.() || b.createdAt || 0) - new Date(a.createdAt?.toDate?.() || a.createdAt || 0))
         .slice(0, 6);
+    } else {
+      console.log('[dashboardService.getAll] no accountId provided');
     }
 
+    console.log('[dashboardService.getAll] bills array length:', bills.length);
     const currentBill = bills.find(b => b.status === 'unpaid' || b.status === 'pending') || bills[0] || null;
+    console.log('[dashboardService.getAll] currentBill:', currentBill);
 
     const outagesSnap = await getDocs(
       query(collection(db, 'outageReports'), where('userId', '==', user.uid), where('status', 'in', ['reported', 'verified', 'assigned', 'in_progress']), limit(5))

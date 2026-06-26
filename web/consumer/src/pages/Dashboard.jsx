@@ -39,7 +39,9 @@ export default function Dashboard() {
   const loadDashboard = React.useCallback(async (acct) => {
     setLoading(true);
     try {
+      console.log('[Dashboard] loadDashboard selectedAccount:', acct);
       const dashboardData = await dashboardService.getAll(acct?.id);
+      console.log('[Dashboard] dashboardData:', dashboardData);
       if (dashboardData.user) setUser(dashboardData.user);
       if (dashboardData.currentBill) {
         const b = dashboardData.currentBill;
