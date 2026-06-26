@@ -1,4 +1,4 @@
-const CACHE = 'anteco-v1';
+const CACHE = 'anteco-v2';
 const ASSETS = [
   '/',
   '/anteco.png',
