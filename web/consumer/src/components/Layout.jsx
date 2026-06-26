@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Receipt, CreditCard, Grid3X3, User,
   Zap, AlertTriangle, ClipboardList, HeadphonesIcon,
-  Sun, Moon, Bell, LogOut, ChevronDown,
+  Sun, Moon, Bell, LogOut, ChevronDown, Menu, X,
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
 
@@ -229,35 +229,18 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               </div>
             </nav>
 
-            {/* Mobile nav */}
-            <nav className="md:hidden flex items-center gap-1 overflow-x-auto scrollbar-none">
-              {allItems.slice(0, 3).map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
-                    location.pathname === item.path
-                      ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-              <div ref={mobileRef} className="shrink-0">
-                <button
-                  onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
-                    moreOpen ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <Grid3X3 className="w-3.5 h-3.5" />
-                  <span>More</span>
-                  <ChevronDown className={`w-3 h-3 transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-            </nav>
+            {/* Mobile hamburger */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90"
+              >
+                {moreOpen
+                  ? <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  : <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                }
+              </button>
+            </div>
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
@@ -282,15 +265,37 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         </div>
       </header>
 
-      {/* Mobile More dropdown */}
+      {/* Mobile drawer */}
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
-          <div className="absolute right-4 top-0 mt-1" onClick={(e) => e.stopPropagation()}>
-            <MoreDropdown
-              items={allItems.slice(3)}
-              isActive={(p) => location.pathname === p}
-              onClose={() => setMoreOpen(false)}
-            />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 h-16 border-b border-gray-200 dark:border-gray-800">
+              <span className="font-bold text-base">ANTECO</span>
+              <button onClick={() => setMoreOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <nav className="py-2">
+              {allItems.map((item) => {
+                const active = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMoreOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-all ${
+                      active
+                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 font-medium border-r-2 border-primary-500'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
         </div>
       )}
