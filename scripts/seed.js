@@ -293,41 +293,36 @@ async function seed() {
     console.log(`  Created user: ${u.first_name} ${u.last_name} (${u.uid})`);
   }
 
-  // Consumer accounts
+  // Consumer accounts — store in LinkAccounts doc per user
+  const linkGroups = {};
   for (const a of SAMPLE_ACCOUNTS) {
-    const ref = db.collection('consumerAccounts').doc();
-    await ref.set({
-      ...a,
-      createdAt: now(),
-      updatedAt: now(),
+    if (!linkGroups[a.userId]) linkGroups[a.userId] = [];
+    linkGroups[a.userId].push({
+      accountNumber: a.account_number,
+      accountName: `${a.connection_type === 'commercial' ? 'Business' : 'Residential'} Account`,
+      status: a.status,
+      linkedAt: now(),
     });
-    console.log(`  Created account: ${a.account_number}`);
+  }
+  for (const [userId, accounts] of Object.entries(linkGroups)) {
+    await db.collection('LinkAccounts').doc(userId).set({ accounts }, { merge: true });
+    console.log(`  Linked ${accounts.length} accounts to ${userId}`);
   }
 
-  // Bills
-  const accountIds = {};
-  const acctSnap = await db.collection('consumerAccounts').get();
-  acctSnap.docs.forEach((d) => {
-    const data = d.data();
-    if (!accountIds[data.userId]) accountIds[data.userId] = [];
-    accountIds[data.userId].push(d.id);
-  });
-
-  for (const [userId, ids] of Object.entries(accountIds)) {
-    for (const accountId of ids) {
-      const bills = generateBills(userId, accountId);
-      for (const b of bills) {
-        const ref = db.collection('billingStatements').doc();
-        await ref.set({
-          ...b,
-          dueDate: b.dueDate,
-          billingDate: b.billingDate,
-          createdAt: ts(b.billingDate),
-          updatedAt: now(),
-        });
-      }
-      console.log(`  Created ${bills.length} bills for account ${accountId}`);
+  // Bills — use account_number as consumerAccountId
+  for (const a of SAMPLE_ACCOUNTS) {
+    const bills = generateBills(a.userId, a.account_number);
+    for (const b of bills) {
+      const ref = db.collection('billingStatements').doc();
+      await ref.set({
+        ...b,
+        dueDate: b.dueDate,
+        billingDate: b.billingDate,
+        createdAt: ts(b.billingDate),
+        updatedAt: now(),
+      });
     }
+    console.log(`  Created ${bills.length} bills for account ${a.account_number}`);
   }
 
   // Consumption data
