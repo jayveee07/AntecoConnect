@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Receipt, CreditCard, Grid3X3, User,
   Zap, AlertTriangle, ClipboardList, HeadphonesIcon,
   Sun, Moon, Bell, LogOut, ChevronDown, Menu, X,
+  CheckCheck, ExternalLink,
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
 
@@ -130,17 +131,29 @@ function NavLink({ item, inVisible, isActive }) {
   );
 }
 
+const SAMPLE_NOTIFS = [
+  { id: 1, icon: Receipt, title: 'Bill due in 3 days', desc: 'Your electric bill of ₱1,245.00 is due on Jun 30', time: '2h ago', unread: true },
+  { id: 2, icon: AlertTriangle, title: 'Scheduled maintenance', desc: 'Power interruption on July 2, 9AM–2PM in your area', time: '1d ago', unread: true },
+  { id: 3, icon: CheckCheck, title: 'Payment confirmed', desc: 'Your payment of ₱1,200.00 was received', time: '3d ago', unread: false },
+  { id: 4, icon: Zap, title: 'Usage alert', desc: 'Your consumption is 15% higher than last month', time: '5d ago', unread: false },
+];
+
 export default function Layout({ isDark, toggleTheme, onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const [notifOpen, setNotifOpen] = React.useState(false);
+  const [notifications, setNotifications] = React.useState(SAMPLE_NOTIFS);
   const desktopRef = React.useRef(null);
   const drawerRef = React.useRef(null);
+  const notifRef = React.useRef(null);
 
   const { visible, overflow } = useNavSplit();
   const overflowPaths = overflow.map((i) => i.path);
+
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
   React.useEffect(() => {
     function handleClick(e) {
@@ -152,8 +165,23 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
   }, []);
 
   React.useEffect(() => {
+    function handleClick(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  React.useEffect(() => {
     setMoreOpen(false);
+    setNotifOpen(false);
   }, [location.pathname]);
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  };
 
   const isMoreActive = (path) => overflowPaths.includes(path);
 
@@ -242,10 +270,74 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
-              <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
-                <Bell className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900" />
-              </button>
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90"
+                >
+                  <Bell className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900" />
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                      <span className="text-sm font-semibold">Notifications</span>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllRead}
+                          className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-gray-400">
+                          No notifications
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <button
+                            key={n.id}
+                            className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                              n.unread ? 'bg-primary-50/50 dark:bg-primary-950/30' : ''
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-lg shrink-0 ${
+                              n.unread
+                                ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                            }`}>
+                              <n.icon className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm ${n.unread ? 'font-semibold' : 'text-gray-600 dark:text-gray-400'}`}>
+                                {n.title}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{n.desc}</p>
+                              <p className="text-[11px] text-gray-400 mt-1">{n.time}</p>
+                            </div>
+                            {n.unread && (
+                              <span className="w-2 h-2 bg-primary-500 rounded-full mt-2 shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                    <Link
+                      to="/profile?tab=notifications"
+                      className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm text-primary-600 dark:text-primary-400 font-medium border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      View all notifications
+                    </Link>
+                  </div>
+                )}
+              </div>
               <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
                 {isDark
                   ? <Sun className="w-5 h-5 text-gray-500 dark:text-gray-400" />
