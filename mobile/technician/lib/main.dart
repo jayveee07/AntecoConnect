@@ -20,11 +20,11 @@ class AntecoTechnicianApp extends StatelessWidget {
           seedColor: const Color(0xFFFF6B00),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: Colors.black,
+        scaffoldBackgroundColor: const Color(0xFF111827),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Color(0xFF1A1A1A),
+          backgroundColor: Color(0xFF1E293B),
         ),
       ),
       home: const TechnicianHomeScreen(),
@@ -140,20 +140,13 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Column(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/anteco.png',
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                      ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/images/anteco.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -212,7 +205,7 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   void _showNotifications(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF1E293B),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -346,7 +339,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade800),
       ),
@@ -394,7 +387,7 @@ class _OrderCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade800),
       ),
@@ -495,7 +488,7 @@ class _MeterReadingTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.shade800),
                   ),
@@ -513,7 +506,7 @@ class _MeterReadingTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.shade800),
                   ),
@@ -531,7 +524,7 @@ class _MeterReadingTab extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: const Color(0xFF1E293B),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.shade800),
                   ),
@@ -583,7 +576,7 @@ class _MeterCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade800),
       ),
