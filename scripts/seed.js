@@ -293,7 +293,7 @@ async function seed() {
     console.log(`  Created user: ${u.first_name} ${u.last_name} (${u.uid})`);
   }
 
-  // Consumer accounts — store in LinkAccounts doc per user
+  // Consumer accounts — store in linkAccounts doc per user
   const linkGroups = {};
   for (const a of SAMPLE_ACCOUNTS) {
     if (!linkGroups[a.userId]) linkGroups[a.userId] = [];
@@ -305,7 +305,7 @@ async function seed() {
     });
   }
   for (const [userId, accounts] of Object.entries(linkGroups)) {
-    await db.collection('LinkAccounts').doc(userId).set({ accounts }, { merge: true });
+    await db.collection('linkAccounts').doc(userId).set({ accounts }, { merge: true });
     console.log(`  Linked ${accounts.length} accounts to ${userId}`);
   }
 

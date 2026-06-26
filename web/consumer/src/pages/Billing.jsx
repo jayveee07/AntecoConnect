@@ -35,7 +35,7 @@ export default function Billing() {
       const u = auth.currentUser;
       if (!u) return;
       try {
-        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const linkSnap = await getDoc(doc(db, 'linkAccounts', u.uid));
         const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setAccounts(accts);
         const first = accts.length > 0 ? accts[0] : null;

@@ -75,7 +75,7 @@ export default function Profile({ onLogout }) {
       const user = auth.currentUser;
       if (!user) return;
       try {
-        const linkSnap = await getDoc(doc(db, 'LinkAccounts', user.uid));
+        const linkSnap = await getDoc(doc(db, 'linkAccounts', user.uid));
         const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setLinkedAccounts(accts);
       } catch {} finally {
@@ -143,7 +143,7 @@ export default function Profile({ onLogout }) {
     setAddingAccount(true);
     try {
       const can = newAccountNumber.trim().toUpperCase();
-      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkRef = doc(db, 'linkAccounts', user.uid);
       const linkSnap = await getDoc(linkRef);
       const existingAccounts = linkSnap.exists() ? linkSnap.data().accounts || [] : [];
 
@@ -188,7 +188,7 @@ export default function Profile({ onLogout }) {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkRef = doc(db, 'linkAccounts', user.uid);
       const linkSnap = await getDoc(linkRef);
       if (!linkSnap.exists()) return;
       const account = linkSnap.data().accounts?.find((a) => a.accountNumber === acctNumber);

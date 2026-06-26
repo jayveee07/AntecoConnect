@@ -80,7 +80,7 @@ export default function Dashboard() {
       const u = auth.currentUser;
       if (!u) return;
       try {
-        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const linkSnap = await getDoc(doc(db, 'linkAccounts', u.uid));
         const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setAccounts(accts);
         if (accts.length > 0) {

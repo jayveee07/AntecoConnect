@@ -13,7 +13,7 @@ export default function RequireAccount({ children }) {
     if (!u) return;
     (async () => {
       try {
-        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const linkSnap = await getDoc(doc(db, 'linkAccounts', u.uid));
         const accts = linkSnap.exists() ? (linkSnap.data().accounts || []) : [];
         setAccounts(accts.map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })));
       } catch {} finally {

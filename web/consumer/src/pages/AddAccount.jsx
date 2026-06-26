@@ -46,7 +46,7 @@ export default function AddAccount() {
     try {
       const can = form.accountNumber.trim().toUpperCase();
 
-      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkRef = doc(db, 'linkAccounts', user.uid);
       const linkSnap = await getDoc(linkRef);
       const existingAccounts = linkSnap.exists() ? linkSnap.data().accounts || [] : [];
 
