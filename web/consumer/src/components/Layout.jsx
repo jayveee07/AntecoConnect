@@ -58,13 +58,13 @@ function useNavSplit() {
   React.useEffect(() => {
     const measure = () => {
       const ww = window.innerWidth;
-      const base = 120 + 140 + 48 + 32;
+      const base = 120 + 140 + 48 + 16 + 32;
       const avail = Math.max(0, ww - base);
       let used = 0;
       let idx = 0;
       for (; idx < allItems.length; idx++) {
-        const need = itemWidth(allItems[idx]);
-        const moreRoom = MORE_BTN_W + (allItems.length - idx > 1 ? 8 : 0);
+        const need = itemWidth(allItems[idx]) + (idx > 0 ? 4 : 0);
+        const moreRoom = MORE_BTN_W + (allItems.length - idx > 1 ? 4 : 0);
         if (used + need + moreRoom > avail) break;
         used += need;
       }
@@ -87,6 +87,47 @@ function useNavSplit() {
   const visible = allItems.slice(0, splitIdx);
   const overflow = allItems.slice(splitIdx);
   return { visible, overflow };
+}
+
+function NavLink({ item, inVisible, isActive }) {
+  const ref = React.useRef(null);
+  const [mw, setMw] = React.useState(0);
+  const location = useLocation();
+  const active = location.pathname === item.path;
+
+  React.useLayoutEffect(() => {
+    if (ref.current) {
+      const w = ref.current.scrollWidth;
+      if (w !== mw) setMw(w);
+    }
+  });
+
+  return (
+    <div
+      className="overflow-hidden transition-all duration-300 ease-in-out"
+      style={{
+        width: inVisible ? mw || undefined : 0,
+        opacity: inVisible ? 1 : 0,
+        pointerEvents: inVisible ? 'auto' : 'none',
+      }}
+    >
+      <Link
+        ref={ref}
+        to={item.path}
+        className={`group flex items-center gap-2 text-sm font-medium whitespace-nowrap px-4 py-2 transition-colors duration-200 ${
+          active
+            ? 'text-primary-600 dark:text-primary-400'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+        }`}
+      >
+        <item.icon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+        <span>{item.label}</span>
+        {active && (
+          <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
+        )}
+      </Link>
+    </div>
+  );
 }
 
 export default function Layout({ isDark, toggleTheme, onLogout }) {
@@ -139,40 +180,24 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center">
-              <div className="flex items-center overflow-hidden">
-                {allItems.map((item) => {
-                  const inVisible = visible.some((v) => v.path === item.path);
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`group relative flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden shrink-0 ${
-                        inVisible
-                          ? 'opacity-100 max-w-[140px] px-4 py-2 pointer-events-auto'
-                          : 'opacity-0 max-w-0 px-0 py-2 pointer-events-none'
-                      } ${
-                        location.pathname === item.path
-                          ? 'text-primary-600 dark:text-primary-400'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                      }`}
-                    >
-                      <item.icon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                      <span>{item.label}</span>
-                      {location.pathname === item.path && (
-                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full transition-all duration-300" />
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
+            <nav className="hidden md:flex items-center gap-1 mx-2">
+              {allItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  item={item}
+                  inVisible={visible.some((v) => v.path === item.path)}
+                />
+              ))}
 
               {/* Desktop More */}
               <div
                 ref={desktopRef}
-                className={`relative shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
-                  overflow.length > 0 ? 'opacity-100 max-w-[100px] pointer-events-auto' : 'opacity-0 max-w-0 pointer-events-none'
-                }`}
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                  width: overflow.length > 0 ? 85 : 0,
+                  opacity: overflow.length > 0 ? 1 : 0,
+                  pointerEvents: overflow.length > 0 ? 'auto' : 'none',
+                }}
               >
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
