@@ -11,7 +11,6 @@ const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { path: '/billing', icon: Receipt, label: 'Bills' },
   { path: '/payments', icon: CreditCard, label: 'Pay' },
-  { path: '/profile', icon: User, label: 'Profile' },
 ];
 
 const moreItems = [
@@ -193,6 +192,9 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                   : <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 }
               </button>
+              <Link to="/profile" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </Link>
               <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
                 <LogOut className="w-5 h-5 text-red-400" />
               </button>
