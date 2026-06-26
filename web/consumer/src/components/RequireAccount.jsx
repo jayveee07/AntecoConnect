@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Plus, Zap } from 'lucide-react';
 
 export default function RequireAccount({ children }) {
@@ -13,9 +13,9 @@ export default function RequireAccount({ children }) {
     if (!u) return;
     (async () => {
       try {
-        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
-        const snap = await getDocs(q);
-        setAccounts(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const accts = linkSnap.exists() ? (linkSnap.data().accounts || []) : [];
+        setAccounts(accts.map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })));
       } catch {} finally {
         setLoading(false);
       }

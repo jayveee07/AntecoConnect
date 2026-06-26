@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { dashboardService, consumptionService } from '../services';
 
 const defaultMonthly = [
@@ -39,9 +39,8 @@ export default function Dashboard() {
       const u = auth.currentUser;
       if (!u) return;
       try {
-        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
-        const snap = await getDocs(q);
-        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setAccounts(accts);
         if (accts.length > 0) setSelectedAccount(accts[0]);
 

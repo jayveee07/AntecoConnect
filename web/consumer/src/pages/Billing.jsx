@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Download, Receipt, CheckCircle, Clock, Zap, ChevronDown, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { billingService } from '../services';
 import RequireAccount from '../components/RequireAccount';
 
@@ -18,10 +18,10 @@ export default function Billing() {
   const fetchData = React.useCallback(async (acct) => {
     setLoading(true);
     try {
-      const accountNumber = acct?.accountNumber || null;
+      const accountId = acct?.id || null;
       const [curRes, allRes] = await Promise.allSettled([
-        billingService.getCurrentBill(accountNumber),
-        billingService.getBills(accountNumber),
+        billingService.getCurrentBill(accountId),
+        billingService.getBills(accountId),
       ]);
       if (curRes.status === 'fulfilled') setCurrentBill(curRes.value);
       if (allRes.status === 'fulfilled') setBills(allRes.value || []);
@@ -35,9 +35,8 @@ export default function Billing() {
       const u = auth.currentUser;
       if (!u) return;
       try {
-        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
-        const snap = await getDocs(q);
-        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const linkSnap = await getDoc(doc(db, 'LinkAccounts', u.uid));
+        const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setAccounts(accts);
         const first = accts.length > 0 ? accts[0] : null;
         setSelectedAccount(first);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const RELATIONSHIPS = [
@@ -46,13 +46,11 @@ export default function AddAccount() {
     try {
       const can = form.accountNumber.trim().toUpperCase();
 
-      const alreadyLinked = query(
-        collection(db, 'consumerAccounts'),
-        where('userId', '==', user.uid),
-        where('accountNumber', '==', can)
-      );
-      const existing = await getDocs(alreadyLinked);
-      if (!existing.empty) {
+      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkSnap = await getDoc(linkRef);
+      const existingAccounts = linkSnap.exists() ? linkSnap.data().accounts || [] : [];
+
+      if (existingAccounts.some((a) => a.accountNumber === can)) {
         setError('This account number is already linked to your profile.');
         setLoading(false);
         return;
@@ -76,8 +74,7 @@ export default function AddAccount() {
         return;
       }
 
-      await addDoc(collection(db, 'consumerAccounts'), {
-        userId: user.uid,
+      const newAccount = {
         accountNumber: can,
         accountName: consumer.ownerName,
         relationship: form.relationship === 'other' ? form.relationshipOther.trim() : form.relationship,
@@ -85,9 +82,10 @@ export default function AddAccount() {
         mobileVerified: false,
         status: 'active',
         consumerId: consumerSnap.docs[0].id,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+        linkedAt: serverTimestamp(),
+      };
+
+      await setDoc(linkRef, { accounts: arrayUnion(newAccount) }, { merge: true });
 
       toast.success('Account verified and linked successfully!');
       navigate('/dashboard');

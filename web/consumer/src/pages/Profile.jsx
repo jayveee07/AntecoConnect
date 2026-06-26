@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -75,9 +75,8 @@ export default function Profile({ onLogout }) {
       const user = auth.currentUser;
       if (!user) return;
       try {
-        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid));
-        const snap = await getDocs(q);
-        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const linkSnap = await getDoc(doc(db, 'LinkAccounts', user.uid));
+        const accts = linkSnap.exists() ? (linkSnap.data().accounts || []).map((a, i) => ({ id: a.accountNumber || `acct-${i}`, ...a })) : [];
         setLinkedAccounts(accts);
       } catch {} finally {
         setAccountsLoading(false);
@@ -144,10 +143,11 @@ export default function Profile({ onLogout }) {
     setAddingAccount(true);
     try {
       const can = newAccountNumber.trim().toUpperCase();
+      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkSnap = await getDoc(linkRef);
+      const existingAccounts = linkSnap.exists() ? linkSnap.data().accounts || [] : [];
 
-      const existing = query(collection(db, 'consumerAccounts'), where('userId', '==', user.uid), where('accountNumber', '==', can));
-      const existingSnap = await getDocs(existing);
-      if (!existingSnap.empty) {
+      if (existingAccounts.some((a) => a.accountNumber === can)) {
         toast.error('This account is already linked');
         setAddingAccount(false);
         return;
@@ -164,16 +164,16 @@ export default function Profile({ onLogout }) {
 
       const consumer = consumerSnap.docs[0].data();
 
-      await addDoc(collection(db, 'consumerAccounts'), {
-        userId: user.uid,
+      const newAccount = {
         accountNumber: can,
         accountName: consumer.ownerName,
         status: 'active',
         consumerId: consumerSnap.docs[0].id,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      setLinkedAccounts([...linkedAccounts, { accountNumber: can, accountName: consumer.ownerName, status: 'active', consumerId: consumerSnap.docs[0].id }]);
+        linkedAt: serverTimestamp(),
+      };
+
+      await setDoc(linkRef, { accounts: arrayUnion(newAccount) }, { merge: true });
+      setLinkedAccounts([...linkedAccounts, { id: can, ...newAccount }]);
       setNewAccountNumber('');
       setShowAddAccount(false);
       toast.success('Account linked successfully');
@@ -184,10 +184,17 @@ export default function Profile({ onLogout }) {
     }
   };
 
-  const handleRemoveAccount = async (acctId) => {
+  const handleRemoveAccount = async (acctNumber) => {
+    const user = auth.currentUser;
+    if (!user) return;
     try {
-      await deleteDoc(doc(db, 'consumerAccounts', acctId));
-      setLinkedAccounts(linkedAccounts.filter((a) => a.id !== acctId));
+      const linkRef = doc(db, 'LinkAccounts', user.uid);
+      const linkSnap = await getDoc(linkRef);
+      if (!linkSnap.exists()) return;
+      const account = linkSnap.data().accounts?.find((a) => a.accountNumber === acctNumber);
+      if (!account) return;
+      await setDoc(linkRef, { accounts: arrayRemove(account) }, { merge: true });
+      setLinkedAccounts(linkedAccounts.filter((a) => a.id !== acctNumber));
       toast.success('Account unlinked');
     } catch {
       toast.error('Failed to unlink account');
