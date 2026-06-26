@@ -84,7 +84,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
         <Route path="/reset-password" element={<ResetPassword isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />} />
 
-        <Route path="/" element={publicRoute(<Landing />)} />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : publicRoute(<Landing />)} />
         <Route path="/about" element={publicRoute(<About />)} />
         <Route path="/services" element={publicRoute(<Services />)} />
         <Route path="/faq" element={publicRoute(<FAQ />)} />
