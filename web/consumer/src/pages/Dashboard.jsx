@@ -36,6 +36,9 @@ export default function Dashboard() {
   const [showAddAccount, setShowAddAccount] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
+  React.useEffect(() => { console.log('[Dashboard] currentBill STATE:', currentBill); }, [currentBill]);
+  React.useEffect(() => { console.log('[Dashboard] recentBills STATE:', recentBills); }, [recentBills]);
+
   const loadDashboard = React.useCallback(async (acct) => {
     setLoading(true);
     try {
@@ -45,23 +48,29 @@ export default function Dashboard() {
       if (dashboardData.user) setUser(dashboardData.user);
       if (dashboardData.currentBill) {
         const b = dashboardData.currentBill;
-        setCurrentBill({
+        const newBill = {
           period: b.billingPeriod || b.billing_period || 'Current',
           amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
           due: b.dueDate || b.due_date || '',
           daysLeft: b.daysUntilDue || b.days_until_due || 0,
-        });
+        };
+        console.log('[Dashboard] setting currentBill to:', newBill);
+        setCurrentBill(newBill);
       } else {
+        console.log('[Dashboard] setting currentBill to null');
         setCurrentBill(null);
       }
       if (dashboardData.bills?.length) {
-        setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
+        const newBills = dashboardData.bills.slice(0, 3).map((b) => ({
           period: b.billingPeriod || b.billing_period || '',
           kwh: b.kwh || b.consumptionKwh || 0,
           amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
           status: b.status || 'unknown',
-        })));
+        }));
+        console.log('[Dashboard] setting recentBills to:', newBills);
+        setRecentBills(newBills);
       } else {
+        console.log('[Dashboard] setting recentBills to empty');
         setRecentBills([]);
       }
       if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
