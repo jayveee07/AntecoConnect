@@ -7,6 +7,7 @@ import {
   CheckCheck,
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
+import InstallButton from './InstallButton';
 
 const allItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
@@ -270,6 +271,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
+              <InstallButton />
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setNotifOpen(!notifOpen)}
