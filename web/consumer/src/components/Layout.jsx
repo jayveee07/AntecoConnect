@@ -270,15 +270,15 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2.5 px-4 h-16 border-b border-gray-200 dark:border-gray-800">
-              <img src="/anteco.png" alt="ANTECO" className="h-9 w-9 rounded-xl" />
-              <div className="flex-1">
-                <span className="font-bold text-base">ANTECO</span>
-                <span className="text-[10px] text-primary-500 font-semibold block -mt-0.5">CONNECT</span>
-              </div>
+            <div className="flex justify-end px-4 pt-4">
               <button onClick={() => setMoreOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
+            </div>
+            <div className="flex flex-col items-center px-4 pb-6 border-b border-gray-200 dark:border-gray-800 mb-2">
+              <img src="/anteco.png" alt="ANTECO" className="h-14 w-14 rounded-2xl mb-3" />
+              <span className="font-bold text-lg">ANTECO</span>
+              <span className="text-[11px] text-primary-500 font-semibold -mt-0.5">CONNECT</span>
             </div>
             <nav className="py-2">
               {allItems.map((item) => {
