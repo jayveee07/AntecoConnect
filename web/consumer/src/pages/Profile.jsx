@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, setDoc, arrayRemove } from 'firebase/firestore';
 import { authService } from '../services';
+import AddAccountModal from '../components/AddAccountModal';
 import toast from 'react-hot-toast';
 
 function ProfileField({ icon: Icon, label, value }) {
@@ -19,8 +19,8 @@ function ProfileField({ icon: Icon, label, value }) {
 }
 
 export default function Profile({ onLogout }) {
-  const navigate = useNavigate();
   const [profile, setProfile] = React.useState(null);
+  const [showAddAccount, setShowAddAccount] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [editing, setEditing] = React.useState(false);
   const [editForm, setEditForm] = React.useState({});
@@ -366,7 +366,7 @@ export default function Profile({ onLogout }) {
         <div className="card space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">Linked Electric Accounts</h3>
-            <button onClick={() => navigate('/add-account')} className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 font-semibold">
+            <button onClick={() => setShowAddAccount(true)} className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 font-semibold">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Add Account
             </button>
@@ -383,7 +383,7 @@ export default function Profile({ onLogout }) {
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No linked accounts yet</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">Link your electric service account to manage bills and services.</p>
-              <button onClick={() => navigate('/add-account')} className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">Link Your First Account</button>
+              <button onClick={() => setShowAddAccount(true)} className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">Link Your First Account</button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -416,6 +416,7 @@ export default function Profile({ onLogout }) {
         </div>
       )}
 
+      <AddAccountModal open={showAddAccount} onClose={() => setShowAddAccount(false)} onLinked={(acct) => setLinkedAccounts((prev) => [...prev, { id: acct.accountNumber, ...acct }])} />
       <button onClick={onLogout} className="flex items-center justify-center gap-2 w-full p-4 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all font-medium">
         <LogOut className="w-5 h-5" /> Sign Out
       </button>

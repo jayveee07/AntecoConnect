@@ -1,11 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Download, Receipt, CheckCircle, Clock, Zap, ChevronDown, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { billingService } from '../services';
 import RequireAccount from '../components/RequireAccount';
+import AddAccountModal from '../components/AddAccountModal';
 
 export default function Billing() {
   const [currentBill, setCurrentBill] = React.useState(null);
@@ -14,6 +14,7 @@ export default function Billing() {
   const [accounts, setAccounts] = React.useState([]);
   const [selectedAccount, setSelectedAccount] = React.useState(null);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [showAddAccount, setShowAddAccount] = React.useState(false);
 
   const fetchData = React.useCallback(async (acct) => {
     setLoading(true);
@@ -98,13 +99,12 @@ export default function Billing() {
                     </button>
                   ))}
                   <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
-                    <Link to="/add-account"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
+                    <button onClick={() => { setDropdownOpen(false); setShowAddAccount(true); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
                     >
                       <Plus className="w-4 h-4" />
                       Add Account
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </>
@@ -208,6 +208,7 @@ export default function Billing() {
           </ResponsiveContainer>
         </div>
       )}
+      <AddAccountModal open={showAddAccount} onClose={() => setShowAddAccount(false)} onLinked={() => { setShowAddAccount(false); window.location.reload(); }} />
     </div>
     </RequireAccount>
   );

@@ -8,6 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { auth, db } from '../firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { dashboardService, consumptionService } from '../services';
+import AddAccountModal from '../components/AddAccountModal';
 
 const defaultMonthly = [
   { month: 'Jan', kwh: 180 }, { month: 'Feb', kwh: 195 }, { month: 'Mar', kwh: 210 },
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = React.useState([]);
   const [selectedAccount, setSelectedAccount] = React.useState(null);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [showAddAccount, setShowAddAccount] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
   const loadDashboard = React.useCallback(async (acct) => {
@@ -118,11 +120,11 @@ export default function Dashboard() {
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
             Link your ANTECO electric service account to start managing your bills, track usage, and more.
           </p>
-          <Link to="/add-account"
+          <button onClick={() => setShowAddAccount(true)}
             className="inline-flex items-center gap-2 bg-primary-500 text-white px-8 py-4 rounded-xl font-semibold text-base hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/25">
             <Plus className="w-5 h-5" />
             Link Your Account
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -169,13 +171,12 @@ export default function Dashboard() {
                   </button>
                 ))}
                 <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
-                  <Link to="/add-account"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
+                  <button onClick={() => { setDropdownOpen(false); setShowAddAccount(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
                   >
                     <Plus className="w-4 h-4" />
                     Add Account
-                  </Link>
+                  </button>
                 </div>
               </div>
             </>
@@ -316,6 +317,7 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      <AddAccountModal open={showAddAccount} onClose={() => setShowAddAccount(false)} onLinked={() => { setShowAddAccount(false); window.location.reload(); }} />
     </div>
   );
 }
