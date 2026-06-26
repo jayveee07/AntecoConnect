@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, arrayUnion } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const RELATIONSHIPS = [
@@ -82,7 +82,7 @@ export default function AddAccount() {
         mobileVerified: false,
         status: 'active',
         consumerId: consumerSnap.docs[0].id,
-        linkedAt: serverTimestamp(),
+        linkedAt: new Date().toISOString(),
       };
 
       await setDoc(linkRef, { accounts: arrayUnion(newAccount) }, { merge: true });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -169,7 +169,7 @@ export default function Profile({ onLogout }) {
         accountName: consumer.ownerName,
         status: 'active',
         consumerId: consumerSnap.docs[0].id,
-        linkedAt: serverTimestamp(),
+        linkedAt: new Date().toISOString(),
       };
 
       await setDoc(linkRef, { accounts: arrayUnion(newAccount) }, { merge: true });
