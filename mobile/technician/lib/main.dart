@@ -46,6 +46,9 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   List<Map<String, dynamic>> _meterReadings = [];
   bool _loading = true;
 
+  final _labels = ['Dashboard', 'Work Orders', 'Meter Reading'];
+  final _icons = [Icons.dashboard_outlined, Icons.assignment_outlined, Icons.speed_outlined];
+
   @override
   void initState() {
     super.initState();
@@ -70,12 +73,41 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ANTECO Technician'),
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        title: Text(_labels[_currentIndex]),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.person_outline), onPressed: () {}),
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () => _showNotifications(context),
+              ),
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF6B00),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ],
       ),
+      drawer: _buildDrawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -84,19 +116,143 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
           _MeterReadingTab(readings: _meterReadings, loading: _loading),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF1A1A1A),
-        selectedItemColor: const Color(0xFFFF6B00),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Work Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.speed), label: 'Meter Reading'),
-        ],
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B00),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text('A', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('ANTECO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('TECHNICIAN', style: TextStyle(fontSize: 11, color: Color(0xFFFF6B00), fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Colors.grey),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: List.generate(_labels.length, (i) {
+                  return ListTile(
+                    leading: Icon(_icons[i], color: _currentIndex == i ? const Color(0xFFFF6B00) : null),
+                    title: Text(_labels[i], style: TextStyle(
+                      fontWeight: _currentIndex == i ? FontWeight.w600 : FontWeight.normal,
+                      color: _currentIndex == i ? const Color(0xFFFF6B00) : null,
+                    )),
+                    selected: _currentIndex == i,
+                    selectedTileColor: const Color(0xFFFF6B00).withValues(alpha: 0.08),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onTap: () {
+                      setState(() => _currentIndex = i);
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
+              ),
+            ),
+            const Divider(height: 1, color: Colors.grey),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade600,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _notificationItem(Icons.assignment, 'New work order assigned', 'Main St, Unit 3 - Electrical', '5 min ago'),
+            _notificationItem(Icons.check_circle, 'Meter reading completed', 'Smith residence - Meter #M-4421', '1 hr ago'),
+            _notificationItem(Icons.warning_amber, 'Schedule change', 'Johnson appointment moved to 3 PM', '2 hr ago'),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _notificationItem(IconData icon, String title, String subtitle, String time) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: const Color(0xFFFF6B00), size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+      trailing: Text(time, style: const TextStyle(color: Colors.grey, fontSize: 11)),
     );
   }
 }

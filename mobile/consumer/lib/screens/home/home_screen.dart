@@ -33,7 +33,106 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = context.watch<ThemeProvider>();
 
     return Scaffold(
+      drawer: _buildDrawer(theme),
       body: _buildBody(auth, dashboard, theme),
+    );
+  }
+
+  Widget _buildDrawer(ThemeProvider theme) {
+    final activePath = ModalRoute.of(context)?.settings.name ?? '/home';
+    final drawerItems = [
+      ('/home', Icons.dashboard_outlined, 'Dashboard'),
+      ('/payments', Icons.receipt_outlined, 'Bills & Payments'),
+      ('/consumption', Icons.bolt_outlined, 'Usage'),
+      ('/outages', Icons.warning_amber_outlined, 'Outages'),
+      ('/service-requests', Icons.build_outlined, 'Services'),
+      ('/support', Icons.headset_mic_outlined, 'Support'),
+    ];
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: AntecoTheme.primaryOrange,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text('A', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('ANTECO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('CONNECT', style: TextStyle(fontSize: 11, color: AntecoTheme.primaryOrange, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: drawerItems.map((item) {
+                  final active = activePath == item.$1;
+                  return ListTile(
+                    leading: Icon(item.$2, color: active ? AntecoTheme.primaryOrange : null),
+                    title: Text(item.$3, style: TextStyle(
+                      fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                      color: active ? AntecoTheme.primaryOrange : null,
+                    )),
+                    selected: active,
+                    selectedTileColor: AntecoTheme.primaryOrange.withValues(alpha: 0.08),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, item.$1);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/profile');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 
@@ -70,6 +169,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(AuthProvider auth, ThemeProvider theme) {
     return Row(
       children: [
+        Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
         CircleAvatar(
           radius: 24,
           backgroundColor: AntecoTheme.primaryBlue,
@@ -88,9 +193,25 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () => Navigator.pushNamed(context, '/notifications'),
+        Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () => Navigator.pushNamed(context, '/notifications'),
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AntecoTheme.primaryOrange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
         IconButton(
           icon: Icon(theme.isDarkMode ? Icons.light_mode : Icons.dark_mode),
