@@ -46,7 +46,7 @@ export default function AdminLayout({ onLogout }) {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 border-r border-gray-700 transform transition-transform duration-300 lg:translate-x-0 lg:static ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center gap-3 px-6 h-16 border-b border-gray-700">
-          <img src="/anteco.png" alt="ANTECO" className="h-10 w-10 rounded-xl" />
+          <img src="/anteco.png" alt="ANTECO" className="h-10 rounded-xl" />
           <div>
             <h1 className="font-bold text-lg">ANTECO</h1>
             <p className="text-xs text-gray-400 -mt-1">Admin Portal</p>

@@ -25,7 +25,7 @@ export default function Login({ onLogin: onAuthSuccess }) {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <img src="/anteco.png" alt="ANTECO" className="h-16 w-16 mx-auto mb-6 rounded-2xl" />
+          <img src="/anteco.png" alt="ANTECO" className="h-16 mx-auto mb-6 rounded-2xl" />
           <h1 className="text-3xl font-bold text-white">Admin Portal</h1>
           <p className="text-gray-400 mt-2">ANTECO CONNECT Management</p>
         </div>
