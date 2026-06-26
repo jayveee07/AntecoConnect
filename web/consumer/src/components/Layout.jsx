@@ -170,8 +170,21 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
       <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
+            {/* Mobile hamburger */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90"
+              >
+                {moreOpen
+                  ? <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  : <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                }
+              </button>
+            </div>
+
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0">
+            <Link to="/dashboard" className="hidden md:flex items-center gap-2.5 shrink-0">
               <img src="/anteco.png" alt="ANTECO" className="h-9 w-9 rounded-xl" />
               <div>
                 <span className="font-bold text-base">ANTECO</span>
@@ -229,19 +242,6 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               </div>
             </nav>
 
-            {/* Mobile hamburger */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90"
-              >
-                {moreOpen
-                  ? <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  : <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                }
-              </button>
-            </div>
-
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
               <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
@@ -270,8 +270,12 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 h-16 border-b border-gray-200 dark:border-gray-800">
-              <span className="font-bold text-base">ANTECO</span>
+            <div className="flex items-center gap-2.5 px-4 h-16 border-b border-gray-200 dark:border-gray-800">
+              <img src="/anteco.png" alt="ANTECO" className="h-9 w-9 rounded-xl" />
+              <div className="flex-1">
+                <span className="font-bold text-base">ANTECO</span>
+                <span className="text-[10px] text-primary-500 font-semibold block -mt-0.5">CONNECT</span>
+              </div>
               <button onClick={() => setMoreOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
