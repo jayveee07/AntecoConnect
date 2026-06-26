@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Receipt, CreditCard, Grid3X3, User,
   Zap, AlertTriangle, ClipboardList, HeadphonesIcon,
   Sun, Moon, Bell, LogOut, ChevronDown, Menu, X,
-  CheckCheck, ExternalLink,
+  CheckCheck,
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
 
@@ -328,13 +328,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                         ))
                       )}
                     </div>
-                    <Link
-                      to="/profile?tab=notifications"
-                      className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm text-primary-600 dark:text-primary-400 font-medium border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      View all notifications
-                    </Link>
+
                   </div>
                 )}
               </div>
