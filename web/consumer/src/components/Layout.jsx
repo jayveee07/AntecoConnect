@@ -26,7 +26,7 @@ function itemWidth(item) {
 
 function MoreDropdown({ items, isActive, onClose }) {
   return (
-    <div className="w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden">
+    <div className="w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden origin-top-right">
       <div className="px-4 pb-1.5 mb-1 border-b border-gray-100 dark:border-gray-800">
         <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">More</span>
       </div>
@@ -37,10 +37,10 @@ function MoreDropdown({ items, isActive, onClose }) {
             key={item.path}
             to={item.path}
             onClick={onClose}
-            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${
+            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-200 ${
               active
                 ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 font-medium'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:translate-x-0.5'
             }`}
           >
             <item.icon className="w-4 h-4" />
@@ -135,53 +135,66 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
 
             {/* Desktop nav */}
             <nav ref={navRef} className="hidden md:flex items-center">
-              {visible.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                    location.pathname === item.path
+              <div className="flex items-center overflow-hidden">
+                {allItems.map((item) => {
+                  const inVisible = visible.some((v) => v.path === item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`group relative flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out overflow-hidden shrink-0 ${
+                        inVisible
+                          ? 'opacity-100 max-w-[140px] px-4 py-2 pointer-events-auto'
+                          : 'opacity-0 max-w-0 px-0 py-2 pointer-events-none'
+                      } ${
+                        location.pathname === item.path
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                      <span>{item.label}</span>
+                      {location.pathname === item.path && (
+                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full transition-all duration-300" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Desktop More */}
+              <div
+                ref={desktopRef}
+                className={`relative shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+                  overflow.length > 0 ? 'opacity-100 max-w-[100px] pointer-events-auto' : 'opacity-0 max-w-0 pointer-events-none'
+                }`}
+              >
+                <button
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    isMoreActive(location.pathname) || moreOpen
                       ? 'text-primary-600 dark:text-primary-400'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                  {location.pathname === item.path && (
-                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
+                  <Grid3X3 className="w-4 h-4" />
+                  <span>More</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                  {(isMoreActive(location.pathname) || moreOpen) && (
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full transition-all duration-300" />
                   )}
-                </Link>
-              ))}
+                </button>
 
-              {overflow.length > 0 && (
-                <div ref={desktopRef} className="relative">
-                  <button
-                    onClick={() => setMoreOpen(!moreOpen)}
-                    className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                      isMoreActive(location.pathname) || moreOpen
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                    <span>More</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
-                    {(isMoreActive(location.pathname) || moreOpen) && (
-                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
-                    )}
-                  </button>
-
-                  {moreOpen && (
-                    <div className="absolute top-full left-0 mt-2">
-                      <MoreDropdown
-                        items={overflow}
-                        isActive={(p) => location.pathname === p}
-                        onClose={() => setMoreOpen(false)}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+                {moreOpen && (
+                  <div className="absolute top-full left-0 mt-2">
+                    <MoreDropdown
+                      items={overflow}
+                      isActive={(p) => location.pathname === p}
+                      onClose={() => setMoreOpen(false)}
+                    />
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Mobile nav */}
@@ -190,7 +203,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
                     location.pathname === item.path
                       ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400'
                       : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -204,33 +217,33 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               <div ref={mobileRef}>
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-all duration-200 active:scale-95 ${
                     moreOpen ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   <Grid3X3 className="w-3.5 h-3.5" />
                   <span>More</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3 h-3 transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
                 </button>
               </div>
             </nav>
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
-              <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
                 <Bell className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900" />
               </button>
-              <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
                 {isDark
                   ? <Sun className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                   : <Moon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 }
               </button>
-              <Link to="/profile" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <Link to="/profile" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
                 <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </Link>
-              <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <button onClick={() => setShowLogout(true)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 active:scale-90">
                 <LogOut className="w-5 h-5 text-red-400" />
               </button>
             </div>
@@ -243,7 +256,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute right-4 top-0 mt-1" onClick={(e) => e.stopPropagation()}>
             <MoreDropdown
-              items={allItems}
+              items={overflow.length > 0 ? overflow : allItems}
               isActive={(p) => location.pathname === p}
               onClose={() => setMoreOpen(false)}
             />
