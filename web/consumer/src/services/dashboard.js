@@ -5,29 +5,21 @@ export const dashboardService = {
   getAll: async (accountId) => {
     const user = auth.currentUser;
     if (!user) return {};
-    console.log('[dashboardService.getAll] accountId:', accountId);
 
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data() || {};
 
     let bills = [];
     if (accountId) {
-      console.log('[dashboardService.getAll] querying billingStatements for consumerAccountId:', accountId);
       const snap = await getDocs(
         query(collection(db, 'billingStatements'), where('consumerAccountId', '==', accountId))
       );
-      console.log('[dashboardService.getAll] snap size:', snap.size);
-      snap.docs.forEach(d => console.log('[dashboardService.getAll] doc:', d.id, d.data()));
       bills = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => new Date(b.createdAt?.toDate?.() || b.createdAt || 0) - new Date(a.createdAt?.toDate?.() || a.createdAt || 0))
         .slice(0, 6);
-    } else {
-      console.log('[dashboardService.getAll] no accountId provided');
     }
 
-    console.log('[dashboardService.getAll] bills array length:', bills.length);
     const currentBill = bills.find(b => b.status === 'unpaid' || b.status === 'pending') || bills[0] || null;
-    console.log('[dashboardService.getAll] currentBill:', currentBill);
 
     let activeOutages = [];
     try {
@@ -35,7 +27,7 @@ export const dashboardService = {
         query(collection(db, 'outageReports'), where('userId', '==', user.uid), where('status', 'in', ['reported', 'verified', 'assigned', 'in_progress']), limit(5))
       );
       activeOutages = outagesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { console.error('[dashboardService] outages error:', e); }
+    } catch {}
 
     let pendingRequests = [];
     try {
@@ -43,7 +35,7 @@ export const dashboardService = {
         query(collection(db, 'serviceRequests'), where('userId', '==', user.uid), where('status', 'in', ['submitted', 'under_review']), limit(5))
       );
       pendingRequests = requestsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { console.error('[dashboardService] requests error:', e); }
+    } catch {}
 
     let announcements = [];
     try {
@@ -51,7 +43,7 @@ export const dashboardService = {
         query(collection(db, 'announcements'), where('isActive', '==', true), orderBy('createdAt', 'desc'), limit(3))
       );
       announcements = announcementsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { console.error('[dashboardService] announcements error:', e); }
+    } catch {}
 
     let interruptions = [];
     try {
@@ -59,7 +51,7 @@ export const dashboardService = {
         query(collection(db, 'plannedInterruptions'), where('status', 'in', ['upcoming', 'ongoing']), orderBy('startTime', 'asc'), limit(3))
       );
       interruptions = interruptionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (e) { console.error('[dashboardService] interruptions error:', e); }
+    } catch {}
 
     const totalBilled = bills.reduce((sum, b) => sum + (b.totalAmountDue || 0), 0);
     const totalPaid = bills.reduce((sum, b) => sum + (b.amountPaid || 0), 0);

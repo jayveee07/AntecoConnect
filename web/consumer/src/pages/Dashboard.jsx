@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { dashboardService, consumptionService } from '../services';
 import AddAccountModal from '../components/AddAccountModal';
 
@@ -36,41 +36,30 @@ export default function Dashboard() {
   const [showAddAccount, setShowAddAccount] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => { console.log('[Dashboard] currentBill STATE:', currentBill); }, [currentBill]);
-  React.useEffect(() => { console.log('[Dashboard] recentBills STATE:', recentBills); }, [recentBills]);
-
   const loadDashboard = React.useCallback(async (acct) => {
     setLoading(true);
     try {
-      console.log('[Dashboard] loadDashboard selectedAccount:', acct);
       const dashboardData = await dashboardService.getAll(acct?.id);
-      console.log('[Dashboard] dashboardData:', dashboardData);
       if (dashboardData.user) setUser(dashboardData.user);
       if (dashboardData.currentBill) {
         const b = dashboardData.currentBill;
-        const newBill = {
+        setCurrentBill({
           period: b.billingPeriod || b.billing_period || 'Current',
           amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
           due: b.dueDate || b.due_date || '',
           daysLeft: b.daysUntilDue || b.days_until_due || 0,
-        };
-        console.log('[Dashboard] setting currentBill to:', newBill);
-        setCurrentBill(newBill);
+        });
       } else {
-        console.log('[Dashboard] setting currentBill to null');
         setCurrentBill(null);
       }
       if (dashboardData.bills?.length) {
-        const newBills = dashboardData.bills.slice(0, 3).map((b) => ({
+        setRecentBills(dashboardData.bills.slice(0, 3).map((b) => ({
           period: b.billingPeriod || b.billing_period || '',
           kwh: b.kwh || b.consumptionKwh || 0,
           amount: (b.totalAmountDue || b.total_amount_due || 0).toLocaleString(),
           status: b.status || 'unknown',
-        }));
-        console.log('[Dashboard] setting recentBills to:', newBills);
-        setRecentBills(newBills);
+        })));
       } else {
-        console.log('[Dashboard] setting recentBills to empty');
         setRecentBills([]);
       }
       if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
@@ -83,7 +72,7 @@ export default function Dashboard() {
         }));
         setConsumption(mapped);
       }
-    } catch (e) { console.error('[Dashboard] loadDashboard error:', e); } finally {
+    } catch {} finally {
       setLoading(false);
     }
   }, []);
