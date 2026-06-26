@@ -83,7 +83,7 @@ export default function Dashboard() {
         }));
         setConsumption(mapped);
       }
-    } catch {} finally {
+    } catch (e) { console.error('[Dashboard] loadDashboard error:', e); } finally {
       setLoading(false);
     }
   }, []);
