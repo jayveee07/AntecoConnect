@@ -275,7 +275,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="flex flex-col items-center px-4 pb-6 border-b border-gray-200 dark:border-gray-800 mb-2">
+            <div className="flex flex-col items-center px-4 pt-6 pb-6 border-b border-gray-200 dark:border-gray-800 mb-2">
               <img src="/anteco.png" alt="ANTECO" className="h-14 w-14 rounded-2xl mb-3" />
               <span className="font-bold text-lg">ANTECO</span>
               <span className="text-[11px] text-primary-500 font-semibold -mt-0.5">CONNECT</span>
