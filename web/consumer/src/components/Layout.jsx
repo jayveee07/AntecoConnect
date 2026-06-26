@@ -212,7 +212,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
 
             {/* Logo */}
             <Link to="/dashboard" className="hidden md:flex items-center gap-2.5 shrink-0">
-              <div className="bg-white rounded-xl p-0.5"><img src="/anteco.png" alt="ANTECO" className="h-8 w-8 rounded-[10px]" /></div>
+              <img src="/anteco.png" alt="ANTECO" className="h-9 w-9 rounded-xl dark:mix-blend-multiply" />
               <div>
                 <span className="font-bold text-base">ANTECO</span>
                 <span className="text-[10px] text-primary-500 font-semibold block -mt-0.5">CONNECT</span>
@@ -368,7 +368,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               </button>
             </div>
             <div className="flex flex-col items-center px-4 pt-6 pb-6 border-b border-gray-200 dark:border-gray-800 mb-2">
-              <div className="bg-white rounded-2xl p-1 mb-3"><img src="/anteco.png" alt="ANTECO" className="h-12 w-12 rounded-xl" /></div>
+              <img src="/anteco.png" alt="ANTECO" className="h-14 w-14 rounded-2xl mb-3 dark:mix-blend-multiply" />
               <span className="font-bold text-lg">ANTECO</span>
               <span className="text-[11px] text-primary-500 font-semibold -mt-0.5">CONNECT</span>
             </div>
