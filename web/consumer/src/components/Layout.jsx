@@ -7,26 +7,28 @@ import {
 } from 'lucide-react';
 import LogoutPrompt from './LogoutPrompt';
 
-const navItems = [
+const allItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { path: '/billing', icon: Receipt, label: 'Bills' },
   { path: '/payments', icon: CreditCard, label: 'Pay' },
-];
-
-const moreItems = [
   { path: '/consumption', icon: Zap, label: 'Usage' },
   { path: '/outages', icon: AlertTriangle, label: 'Outages' },
   { path: '/service-requests', icon: ClipboardList, label: 'Services' },
   { path: '/support', icon: HeadphonesIcon, label: 'Support' },
 ];
 
-const morePaths = moreItems.map((i) => i.path);
+const ITEM_WIDTHS = { Home: 65, Bills: 60, Pay: 55, Usage: 70, Outages: 80, Services: 85, Support: 80 };
+const MORE_BTN_W = 85;
+
+function itemWidth(item) {
+  return ITEM_WIDTHS[item.label] || 75;
+}
 
 function MoreDropdown({ items, isActive, onClose }) {
   return (
     <div className="w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden">
       <div className="px-4 pb-1.5 mb-1 border-b border-gray-100 dark:border-gray-800">
-        <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Services</span>
+        <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">More</span>
       </div>
       {items.map((item) => {
         const active = isActive(item.path);
@@ -50,13 +52,48 @@ function MoreDropdown({ items, isActive, onClose }) {
   );
 }
 
+function useNavSplit(navRef) {
+  const [splitIdx, setSplitIdx] = React.useState(allItems.length);
+
+  React.useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const avail = el.clientWidth;
+      let used = 0;
+      let idx = 0;
+      for (; idx < allItems.length; idx++) {
+        const need = itemWidth(allItems[idx]);
+        const moreRoom = MORE_BTN_W + (allItems.length - idx > 1 ? 8 : 0);
+        if (used + need + moreRoom > avail) break;
+        used += need;
+      }
+      setSplitIdx(idx);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [navRef]);
+
+  const visible = allItems.slice(0, splitIdx);
+  const overflow = allItems.slice(splitIdx);
+  return { visible, overflow };
+}
+
 export default function Layout({ isDark, toggleTheme, onLogout }) {
   const location = useLocation();
   const [showLogout, setShowLogout] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const navRef = React.useRef(null);
   const desktopRef = React.useRef(null);
   const mobileRef = React.useRef(null);
+
+  const { visible, overflow } = useNavSplit(navRef);
+  const overflowPaths = overflow.map((i) => i.path);
 
   React.useEffect(() => {
     function handleClick(e) {
@@ -74,7 +111,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
     setMoreOpen(false);
   }, [location.pathname]);
 
-  const isMoreActive = (path) => morePaths.includes(path);
+  const isMoreActive = (path) => overflowPaths.includes(path);
 
   const handleLogoutConfirm = async () => {
     setLoggingOut(true);
@@ -97,8 +134,8 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center">
-              {navItems.map((item) => (
+            <nav ref={navRef} className="hidden md:flex items-center">
+              {visible.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -116,39 +153,40 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                 </Link>
               ))}
 
-              {/* Desktop More */}
-              <div ref={desktopRef} className="relative">
-                <button
-                  onClick={() => setMoreOpen(!moreOpen)}
-                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                    isMoreActive(location.pathname) || moreOpen
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                  <span>More</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
-                  {(isMoreActive(location.pathname) || moreOpen) && (
-                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
-                  )}
-                </button>
+              {overflow.length > 0 && (
+                <div ref={desktopRef} className="relative">
+                  <button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                      isMoreActive(location.pathname) || moreOpen
+                        ? 'text-primary-600 dark:text-primary-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                    <span>More</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                    {(isMoreActive(location.pathname) || moreOpen) && (
+                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
+                    )}
+                  </button>
 
-                {moreOpen && (
-                  <div className="absolute top-full left-0 mt-2">
-                    <MoreDropdown
-                      items={moreItems}
-                      isActive={(p) => location.pathname === p}
-                      onClose={() => setMoreOpen(false)}
-                    />
-                  </div>
-                )}
-              </div>
+                  {moreOpen && (
+                    <div className="absolute top-full left-0 mt-2">
+                      <MoreDropdown
+                        items={overflow}
+                        isActive={(p) => location.pathname === p}
+                        onClose={() => setMoreOpen(false)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
 
             {/* Mobile nav */}
             <nav className="md:hidden flex items-center gap-1 overflow-x-auto scrollbar-none">
-              {navItems.map((item) => (
+              {allItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -163,14 +201,11 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                 </Link>
               ))}
 
-              {/* Mobile More */}
               <div ref={mobileRef}>
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-medium transition-colors ${
-                    isMoreActive(location.pathname) || moreOpen
-                      ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    moreOpen ? 'bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   <Grid3X3 className="w-3.5 h-3.5" />
@@ -208,7 +243,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute right-4 top-0 mt-1" onClick={(e) => e.stopPropagation()}>
             <MoreDropdown
-              items={moreItems}
+              items={allItems}
               isActive={(p) => location.pathname === p}
               onClose={() => setMoreOpen(false)}
             />
