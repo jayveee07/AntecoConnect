@@ -2,21 +2,25 @@ import { auth, db } from '../firebase';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export const billingService = {
-  getCurrentBill: async () => {
+  getCurrentBill: async (accountNumber) => {
     const user = auth.currentUser;
     if (!user) return null;
+    const conditions = [where('userId', '==', user.uid)];
+    if (accountNumber) conditions.push(where('accountNumber', '==', accountNumber));
     const billsSnap = await getDocs(
-      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(1))
+      query(collection(db, 'billingStatements'), ...conditions, orderBy('createdAt', 'desc'), limit(1))
     );
     if (billsSnap.empty) return null;
     return { id: billsSnap.docs[0].id, ...billsSnap.docs[0].data() };
   },
 
-  getBills: async () => {
+  getBills: async (accountNumber) => {
     const user = auth.currentUser;
     if (!user) return [];
+    const conditions = [where('userId', '==', user.uid)];
+    if (accountNumber) conditions.push(where('accountNumber', '==', accountNumber));
     const snap = await getDocs(
-      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('billingPeriod', 'desc'))
+      query(collection(db, 'billingStatements'), ...conditions, orderBy('billingPeriod', 'desc'))
     );
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },

@@ -1,6 +1,9 @@
 import React from 'react';
-import { Download, Receipt, CheckCircle, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, Receipt, CheckCircle, Clock, Zap, ChevronDown, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { billingService } from '../services';
 import RequireAccount from '../components/RequireAccount';
 
@@ -8,22 +11,43 @@ export default function Billing() {
   const [currentBill, setCurrentBill] = React.useState(null);
   const [bills, setBills] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [accounts, setAccounts] = React.useState([]);
+  const [selectedAccount, setSelectedAccount] = React.useState(null);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
+  const fetchData = React.useCallback(async (acct) => {
+    setLoading(true);
+    try {
+      const accountNumber = acct?.accountNumber || null;
+      const [curRes, allRes] = await Promise.allSettled([
+        billingService.getCurrentBill(accountNumber),
+        billingService.getBills(accountNumber),
+      ]);
+      if (curRes.status === 'fulfilled') setCurrentBill(curRes.value);
+      if (allRes.status === 'fulfilled') setBills(allRes.value || []);
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
-    const fetch = async () => {
+    const init = async () => {
+      const u = auth.currentUser;
+      if (!u) return;
       try {
-        const [curRes, allRes] = await Promise.allSettled([
-          billingService.getCurrentBill(),
-          billingService.getBills(),
-        ]);
-        if (curRes.status === 'fulfilled') setCurrentBill(curRes.value);
-        if (allRes.status === 'fulfilled') setBills(allRes.value || []);
-      } catch {} finally {
+        const q = query(collection(db, 'consumerAccounts'), where('userId', '==', u.uid));
+        const snap = await getDocs(q);
+        const accts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setAccounts(accts);
+        const first = accts.length > 0 ? accts[0] : null;
+        setSelectedAccount(first);
+        fetchData(first);
+      } catch {
         setLoading(false);
       }
     };
-    fetch();
-  }, []);
+    init();
+  }, [fetchData]);
 
   const bill = currentBill || {};
   const breakdown = bill.breakdown || bill;
@@ -41,9 +65,56 @@ export default function Billing() {
           <h1 className="text-2xl font-bold">Billing</h1>
           <p className="text-gray-500 dark:text-gray-400">View and manage your electricity bills</p>
         </div>
-        <button className="btn-secondary flex items-center gap-2">
-          <Download className="w-4 h-4" /> Download All
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium hover:border-primary-300 dark:hover:border-primary-700 transition-all"
+            >
+              <Zap className="w-4 h-4 text-primary-500" />
+              <span>{selectedAccount?.accountNumber || 'Select Account'}</span>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {dropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-20 py-2 overflow-hidden">
+                  {accounts.map((acct) => (
+                    <button
+                      key={acct.id}
+                      onClick={() => { setSelectedAccount(acct); setDropdownOpen(false); fetchData(acct); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all ${
+                        selectedAccount?.id === acct.id
+                          ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 font-medium'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <Zap className="w-4 h-4 shrink-0" />
+                      <div>
+                        <p className="font-medium">{acct.accountNumber}</p>
+                        <p className="text-xs text-gray-400 truncate">{acct.accountName || ''}</p>
+                      </div>
+                      {acct.status === 'active' && <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-medium">Active</span>}
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                    <Link to="/add-account"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-primary-500 hover:text-primary-600 font-medium hover:bg-primary-50 dark:hover:bg-primary-950 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Account
+                    </Link>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          <button className="btn-secondary flex items-center gap-2">
+            <Download className="w-4 h-4" /> Download All
+          </button>
+        </div>
       </div>
 
       {currentBill && (
