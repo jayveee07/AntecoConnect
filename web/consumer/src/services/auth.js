@@ -79,7 +79,7 @@ export const authService = {
       is_verified: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
     return { user: { uid: user.uid, first_name, last_name, email: user.email, mobile_number } };
   },
 

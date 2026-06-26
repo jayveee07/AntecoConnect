@@ -1,7 +1,60 @@
 import React from 'react';
 import { Map as MapIcon, Zap, Bell, Filter, Layers, Download } from 'lucide-react';
+import { gisService } from '../services';
+
+const defaultLayers = [
+  { label: 'Consumer Locations', count: '45,892', color: 'blue' },
+  { label: 'Electric Poles', count: '8,230', color: 'green' },
+  { label: 'Transformers', count: '1,456', color: 'orange' },
+  { label: 'Feeders', count: '24', color: 'purple' },
+  { label: 'Service Areas', count: '12', color: 'yellow' },
+  { label: 'Active Outages', count: '3', color: 'red' },
+];
+
+const defaultQuickStats = [
+  { label: 'Poles', value: '8,230' },
+  { label: 'Transformers', value: '1,456' },
+  { label: 'Feeders', value: '24' },
+  { label: 'Service Areas', value: '12' },
+];
 
 export default function GIS() {
+  const [layers, setLayers] = React.useState(defaultLayers);
+  const [quickStats, setQuickStats] = React.useState(defaultQuickStats);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [polesRes, transformersRes, feedersRes] = await Promise.all([
+          gisService.getPoles(),
+          gisService.getTransformers(),
+          gisService.getFeeders(),
+        ]);
+        if (polesRes.data?.data || transformersRes.data?.data || feedersRes.data?.data) {
+          const newLayers = [...defaultLayers];
+          const newStats = [...defaultQuickStats];
+          if (polesRes.data?.data) {
+            newLayers[1] = { ...newLayers[1], count: String(polesRes.data.data.length || polesRes.data.data) };
+            newStats[0] = { ...newStats[0], value: String(polesRes.data.data.length || polesRes.data.data) };
+          }
+          if (transformersRes.data?.data) {
+            newLayers[2] = { ...newLayers[2], count: String(transformersRes.data.data.length || transformersRes.data.data) };
+            newStats[1] = { ...newStats[1], value: String(transformersRes.data.data.length || transformersRes.data.data) };
+          }
+          if (feedersRes.data?.data) {
+            newLayers[3] = { ...newLayers[3], count: String(feedersRes.data.data.length || feedersRes.data.data) };
+            newStats[2] = { ...newStats[2], value: String(feedersRes.data.data.length || feedersRes.data.data) };
+          }
+          setLayers(newLayers);
+          setQuickStats(newStats);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -17,14 +70,7 @@ export default function GIS() {
           <div className="card">
             <h3 className="font-semibold mb-3">Map Layers</h3>
             <div className="space-y-2">
-              {[
-                { label: 'Consumer Locations', count: '45,892', color: 'blue' },
-                { label: 'Electric Poles', count: '8,230', color: 'green' },
-                { label: 'Transformers', count: '1,456', color: 'orange' },
-                { label: 'Feeders', count: '24', color: 'purple' },
-                { label: 'Service Areas', count: '12', color: 'yellow' },
-                { label: 'Active Outages', count: '3', color: 'red' },
-              ].map((layer, i) => (
+              {layers.map((layer, i) => (
                 <label key={i} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="rounded" />
@@ -39,10 +85,9 @@ export default function GIS() {
           <div className="card">
             <h3 className="font-semibold mb-3">Quick Stats</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-gray-400">Poles</span><span>8,230</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Transformers</span><span>1,456</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Feeders</span><span>24</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Service Areas</span><span>12</span></div>
+              {quickStats.map((stat, i) => (
+                <div key={i} className="flex justify-between"><span className="text-gray-400">{stat.label}</span><span>{stat.value}</span></div>
+              ))}
             </div>
           </div>
         </div>

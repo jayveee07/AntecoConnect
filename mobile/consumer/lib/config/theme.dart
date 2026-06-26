@@ -15,6 +15,8 @@ class AntecoTheme {
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color cardColor = Color(0xFFFFFFFF);
   static const Color dividerColor = Color(0xFFE0E0E0);
+  static const Color primaryBlue = Color(0xFF1565C0);
+  static const Color electricYellow = Color(0xFFFFD600);
 
   static ThemeData get lightTheme {
     return ThemeData(

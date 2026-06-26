@@ -175,7 +175,7 @@ class _ConsumptionScreenState extends State<ConsumptionScreen> {
             const SizedBox(height: 12),
             _insightRow(Icons.bolt, 'Current Month Usage', '${_data!['current_month']?['consumption_kwh']?.toStringAsFixed(0) ?? 0} kWh'),
             const Divider(height: 16),
-            _insightRow(Icons.trending_up, 'Average Daily', '${(_data!['current_month']?['consumption_kwh'] ?? 0 / 30).toStringAsFixed(1)} kWh/day'),
+            _insightRow(Icons.trending_up, 'Average Daily', '${((_data!['current_month']?['consumption_kwh'] ?? 0) / 30).toStringAsFixed(1)} kWh/day'),
             const Divider(height: 16),
             _insightRow(Icons.account_balance_wallet, 'Estimated Bill', '₱${_data!['estimated_bill']?['total']?.toStringAsFixed(2) ?? '0.00'}'),
             const Divider(height: 16),

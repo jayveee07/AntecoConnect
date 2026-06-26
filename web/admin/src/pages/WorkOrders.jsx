@@ -1,7 +1,8 @@
 import React from 'react';
 import { ClipboardList, Clock, CheckCircle, UserCheck, MapPin, Wrench } from 'lucide-react';
+import { workOrderService } from '../services';
 
-const orders = [
+const defaultOrders = [
   { id: 1, type: 'Meter Replacement', address: '123 Rizal St., San Roque', status: 'in_progress', tech: 'Jose Santos', priority: 'urgent', scheduled: 'June 17, 2024' },
   { id: 2, type: 'Reconnection', address: '456 Mabini St., Barangay 1', status: 'assigned', tech: 'Pedro Lim', priority: 'routine', scheduled: 'June 18, 2024' },
   { id: 3, type: 'Service Installation', address: '789 Luna St., Bayanan', status: 'pending', tech: null, priority: 'routine', scheduled: 'June 19, 2024' },
@@ -9,6 +10,23 @@ const orders = [
 ];
 
 export default function WorkOrders() {
+  const [orders, setOrders] = React.useState(defaultOrders);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await workOrderService.getAll();
+        if (res.data?.data) {
+          setOrders(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

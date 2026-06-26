@@ -7,7 +7,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { dashboardService } from '../services';
+import { dashboardService, consumptionService } from '../services';
 
 const defaultMonthly = [
   { month: 'Jan', kwh: 180 }, { month: 'Feb', kwh: 195 }, { month: 'Mar', kwh: 210 },
@@ -66,6 +66,15 @@ export default function Dashboard() {
             })));
           }
           if (dashboardData.activeOutages) setStats((prev) => ({ ...prev, outages: dashboardData.activeOutages.length }));
+        }
+
+        const consumptionResult = await consumptionService.getConsumption();
+        if (consumptionResult?.monthly?.length) {
+          const mapped = consumptionResult.monthly.map((c) => ({
+            month: c.periodMonth || c.period_month || (() => { const d = new Date(); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(d.getMonth()) % 12]; })(),
+            kwh: c.consumptionKwh || c.consumption_kwh || 0,
+          }));
+          setConsumption(mapped);
         }
       } catch {} finally {
         setLoading(false);
@@ -228,7 +237,7 @@ export default function Dashboard() {
             <Clock className={`w-6 h-6 ${currentBill ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`} />
           </div>
           <div>
-            <p className="text-2xl font-bold">0</p>
+            <p className="text-2xl font-bold">{stats.outages}</p>
             <p className="text-sm text-gray-500">Active Outages</p>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Search, CheckCircle, Clock, XCircle, ChevronRight } from 'lucide-react';
+import { adminServiceRequestService } from '../services';
 
-const requests = [
+const defaultRequests = [
   { id: 1, type: 'New Connection', name: 'Carlos Mendoza', status: 'under_review', date: 'June 15, 2024', ref: 'SRQ-2024-004' },
   { id: 2, type: 'Change Ownership', name: 'Teresa Reyes', status: 'approved', date: 'June 14, 2024', ref: 'SRQ-2024-003' },
   { id: 3, type: 'Reconnection', name: 'Roberto Santos', status: 'submitted', date: 'June 13, 2024', ref: 'SRQ-2024-002' },
@@ -9,6 +10,23 @@ const requests = [
 ];
 
 export default function ServiceRequests() {
+  const [requests, setRequests] = React.useState(defaultRequests);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await adminServiceRequestService.getAll();
+        if (res.data?.data) {
+          setRequests(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const statusColors = {
     submitted: 'badge-warning', under_review: 'badge-info',
     approved: 'badge-success', completed: 'badge-success', rejected: 'badge-danger',

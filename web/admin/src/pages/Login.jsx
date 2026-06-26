@@ -1,7 +1,7 @@
 import React from 'react';
 import { authService } from '../services';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin: onAuthSuccess }) {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -13,9 +13,7 @@ export default function Login({ onLogin }) {
     setError('');
     try {
       const { data } = await authService.login({ email, password });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      onLogin();
+      onAuthSuccess(data.token, data.user);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.');
     } finally {

@@ -1,13 +1,31 @@
 import React from 'react';
 import { Search, Download, Filter, ChevronDown } from 'lucide-react';
+import { adminBillingService } from '../services';
 
-const bills = [
+const defaultBills = [
   { id: 1, account: 'ANT-2024-0001', name: 'Juan Dela Cruz', period: 'June 2024', amount: 2847.50, status: 'unpaid', due: 'July 15, 2024' },
   { id: 2, account: 'ANT-2024-0002', name: 'Maria Santos', period: 'June 2024', amount: 1980.00, status: 'paid', due: 'July 15, 2024' },
   { id: 3, account: 'ANT-2024-0004', name: 'Ana Gonzales', period: 'May 2024', amount: 3350.25, status: 'overdue', due: 'June 15, 2024' },
 ];
 
 export default function Billing() {
+  const [bills, setBills] = React.useState(defaultBills);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await adminBillingService.getAll();
+        if (res.data?.data) {
+          setBills(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

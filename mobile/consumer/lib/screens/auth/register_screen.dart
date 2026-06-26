@@ -92,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _simulatedOtp = code;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Your OTP code: $code'), backgroundColor: AntecoTheme.primaryOrange),
+        SnackBar(content: Text('Your OTP code: $code (sent to ${_emailCtl.text.trim()})'), backgroundColor: AntecoTheme.primaryOrange),
       );
     } catch (_) {
       setState(() => _error = 'Failed to send OTP');
@@ -128,8 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'city': _cityCtl.text.trim(),
           'province': _provinceCtl.text.trim(),
           'zip_code': _zipCtl.text.trim(),
-          'isEmailVerified': false,
-          'phoneVerified': true,
+          'isEmailVerified': true,
           'accountStatus': 'active',
           'is_verified': false,
           'createdAt': FieldValue.serverTimestamp(),
@@ -157,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_step == 3 ? 'Verify Phone' : 'Create Account')),
+      appBar: AppBar(title: Text(_step == 3 ? 'Verify Email' : 'Create Account')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -259,16 +258,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
                 if (_step == 3) ...[
                   const SizedBox(height: 16),
-                  const Icon(Icons.smartphone, size: 64, color: AntecoTheme.primaryOrange),
+                  const Icon(Icons.email_outlined, size: 64, color: AntecoTheme.primaryOrange),
                   const SizedBox(height: 16),
                   Text(
-                    'Verify your mobile number',
+                    'Verify your email address',
                     textAlign: TextAlign.center,
                     style: AntecoTheme.heading3,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'An OTP has been sent to +63 ${_mobileCtl.text.trim()}',
+                    'An OTP has been sent to ${_emailCtl.text.trim()}',
                     textAlign: TextAlign.center,
                     style: AntecoTheme.body2.copyWith(color: AntecoTheme.lightGray),
                   ),
@@ -289,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _verifyingOtp ? null : _verifyOtp,
                     child: _verifyingOtp
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Verify Phone'),
+                        : const Text('Verify Email'),
                   ),
                   const SizedBox(height: 12),
                   TextButton(

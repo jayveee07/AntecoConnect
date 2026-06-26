@@ -1,7 +1,34 @@
 import React from 'react';
 import { Shield, Bell, Database, Globe, Lock, Users, ChevronRight } from 'lucide-react';
+import { settingsService } from '../services';
 
 export default function Settings() {
+  const [settings, setSettings] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [formValues, setFormValues] = React.useState({
+    vatRate: 12,
+    penaltyRate: 3,
+    disconnectionThreshold: 30,
+  });
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await settingsService.get();
+        if (res.data?.data) {
+          setSettings(res.data.data);
+          setFormValues({
+            vatRate: res.data.data.vat_rate ?? 12,
+            penaltyRate: res.data.data.penalty_rate ?? 3,
+            disconnectionThreshold: res.data.data.disconnection_threshold ?? 30,
+          });
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <h1 className="text-2xl font-bold">System Settings</h1>
@@ -29,15 +56,15 @@ export default function Settings() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-400 mb-2">VAT Rate (%)</label>
-            <input type="number" className="input-field w-48" defaultValue={12} />
+            <input type="number" className="input-field w-48" value={formValues.vatRate} onChange={(e) => setFormValues({...formValues, vatRate: Number(e.target.value)})} />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Penalty Rate (% per month)</label>
-            <input type="number" className="input-field w-48" defaultValue={3} />
+            <input type="number" className="input-field w-48" value={formValues.penaltyRate} onChange={(e) => setFormValues({...formValues, penaltyRate: Number(e.target.value)})} />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-2">Disconnection Threshold (days after due)</label>
-            <input type="number" className="input-field w-48" defaultValue={30} />
+            <input type="number" className="input-field w-48" value={formValues.disconnectionThreshold} onChange={(e) => setFormValues({...formValues, disconnectionThreshold: Number(e.target.value)})} />
           </div>
           <button className="btn-primary">Save Settings</button>
         </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Search, Filter, ChevronDown, MoreHorizontal, Users, Phone, Mail, MapPin } from 'lucide-react';
+import { consumerService } from '../services';
 
-const consumers = [
+const defaultConsumers = [
   { id: 1, name: 'Juan Dela Cruz', account: 'ANT-2024-0001', meter: 'MTR-12345', barangay: 'San Roque', city: 'San Juan', status: 'active', bill: 2847.50 },
   { id: 2, name: 'Maria Santos', account: 'ANT-2024-0002', meter: 'MTR-12346', barangay: 'Barangay 1', city: 'Malolos', status: 'active', bill: 1980.00 },
   { id: 3, name: 'Pedro Reyes', account: 'ANT-2024-0003', meter: 'MTR-12347', barangay: 'Bayanan', city: 'Mabini', status: 'disconnected', bill: 0 },
@@ -10,6 +11,23 @@ const consumers = [
 ];
 
 export default function Consumers() {
+  const [consumers, setConsumers] = React.useState(defaultConsumers);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await consumerService.getAll();
+        if (res.data?.data) {
+          setConsumers(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

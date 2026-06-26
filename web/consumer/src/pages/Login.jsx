@@ -1,21 +1,9 @@
 import React from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-
-const simulatedPhoneVerification = import.meta.env.VITE_BYPASS_PHONE_VERIFICATION !== 'false';
-if (!simulatedPhoneVerification) {
-  auth.settings.appVerificationDisabledForTesting = true;
-}
-
-const formatPhone = (val) => {
-  const digits = val.replace(/\D/g, '');
-  if (digits.startsWith('63') && digits.length >= 11) return '+' + digits;
-  if (digits.startsWith('0')) return '+63' + digits.slice(1);
-  return '+' + digits;
-};
 
 const input = 'w-full px-4 py-3.5 rounded-xl border bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all duration-200 text-sm';
 
@@ -85,49 +73,51 @@ const MethodChoice = ({ mode, onGoogleLogin, googleLoading, onSetMethod }) => (
   </div>
 );
 
-const GoogleCompleteFormView = ({ step, googleProfile, mobileNumber, onMobileChange, onContinue, loading }) => (
+const GoogleCompleteFormView = ({ googleProfile, mobileNumber, onMobileChange, onContinue, loading }) => (
   <div className="space-y-4">
     <div className="text-center mb-2">
       <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, <span className="font-semibold text-gray-900 dark:text-white">{googleProfile?.first_name} {googleProfile?.last_name}</span></p>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {step === 1 ? 'Enter your mobile number to continue' : 'Verify your phone number'}
-      </p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Enter your mobile number to continue</p>
     </div>
-    {step === 1 && (
-      <div className="space-y-4 animate-fade-in">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
-          <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
-            className={input + (mobileNumber === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
-            value={mobileNumber} onChange={onMobileChange} />
-        </div>
-        <SubmitBtn onClick={onContinue} fullWidth disabled={loading}>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
+    <div className="space-y-4 animate-fade-in">
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
+        <input name="mobile_number" type="text" inputMode="numeric" placeholder="0917xxxxxxx" required
+          className={input + (mobileNumber === '' ? ' border-red-300 dark:border-red-700' : ' border-gray-200 dark:border-gray-700')}
+          value={mobileNumber} onChange={onMobileChange} />
       </div>
-    )}
+      <SubmitBtn onClick={onContinue} fullWidth disabled={loading}>{loading ? 'Saving...' : 'Continue'}</SubmitBtn>
+    </div>
   </div>
 );
 
-const PhoneVerifyView = ({ phone, userId, phoneSent, sendingOtp, phoneCode, onCodeChange, onSendOtp, onVerifyOtp, verifyingOtp, onResend }) => (
+const EmailVerifyView = ({ email, userId, emailSent, sendingOtp, emailCode, onCodeChange, onSendOtp, onVerifyOtp, verifyingOtp, onResend, generatedOtp }) => (
   <div className="space-y-4 animate-fade-in">
     <div className="text-center mb-2">
       <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
-        <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <svg className="w-6 h-6 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">Verify your mobile number</p>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">An OTP will be sent to {phone}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400">Verify your email address</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Use the code below to verify your account</p>
     </div>
-    {!phoneSent ? (
-      <SubmitBtn onClick={onSendOtp} fullWidth disabled={sendingOtp}>{sendingOtp ? 'Sending OTP...' : 'Send OTP'}</SubmitBtn>
+    {!emailSent ? (
+      <SubmitBtn onClick={onSendOtp} fullWidth disabled={sendingOtp}>{sendingOtp ? 'Generating Code...' : 'Generate Verification Code'}</SubmitBtn>
     ) : (
       <div className="space-y-4">
-        <Field name="phone_code" label="Enter OTP Code" type="text" inputMode="numeric" placeholder="000000" value={phoneCode}
+        {generatedOtp && (
+          <div className="text-center p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-100 dark:border-primary-800">
+            <p className="text-xs text-primary-600 dark:text-primary-400 font-semibold uppercase tracking-wider mb-2">Verification Code</p>
+            <p className="text-3xl font-bold text-primary-500 tracking-[0.25em] font-mono">{generatedOtp}</p>
+          </div>
+        )}
+        <Field name="email_code" label="Enter OTP Code" type="text" inputMode="numeric" placeholder="000000" value={emailCode}
           onChange={onCodeChange} required pattern="[0-9]{6}" />
         <div className="flex gap-3">
-          <SubmitBtn onClick={onVerifyOtp} fullWidth disabled={verifyingOtp}>{verifyingOtp ? 'Verifying...' : 'Verify Phone'}</SubmitBtn>
+          <SubmitBtn onClick={onVerifyOtp} fullWidth disabled={verifyingOtp}>{verifyingOtp ? 'Verifying...' : 'Verify Email'}</SubmitBtn>
         </div>
         <button type="button" onClick={onResend}
           className="block mx-auto text-xs text-primary-500 hover:text-primary-600 font-semibold">
-          Resend OTP
+          Generate New Code
         </button>
       </div>
     )}
@@ -146,9 +136,8 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
   const [googleProfile, setGoogleProfile] = React.useState(null);
   const [createdUserId, setCreatedUserId] = React.useState(null);
 
-  const [phoneVerificationId, setPhoneVerificationId] = React.useState('');
-  const [phoneCode, setPhoneCode] = React.useState('');
-  const [phoneSent, setPhoneSent] = React.useState(false);
+  const [emailCode, setEmailCode] = React.useState('');
+  const [emailSent, setEmailSent] = React.useState(false);
   const [sendingOtp, setSendingOtp] = React.useState(false);
   const [verifyingOtp, setVerifyingOtp] = React.useState(false);
   const [simulatedOtp, setSimulatedOtp] = React.useState('');
@@ -171,57 +160,30 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
 
   const up = (obj, fn) => (e) => fn({ ...obj, [e.target.name]: e.target.value });
 
-  const handleSendOtp = async (phone, userId) => {
+  const handleSendOtp = async (email, userId) => {
     setSendingOtp(true);
     setError('');
-    const formatted = formatPhone(phone);
     try {
-      if (simulatedPhoneVerification) {
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        setSimulatedOtp(code);
-        setPhoneSent(true);
-        toast.success('Your OTP code: ' + code);
-      } else {
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: () => {},
-          });
-        }
-        const provider = new PhoneAuthProvider(auth);
-        const verificationId = await provider.verifyPhoneNumber(formatted, window.recaptchaVerifier);
-        setPhoneVerificationId(verificationId);
-        setPhoneSent(true);
-        toast.success('OTP sent to ' + formatted);
-      }
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      setSimulatedOtp(code);
+      setEmailSent(true);
     } catch (err) {
-      if (err.code === 'auth/too-many-requests') {
-        setError('Too many requests. Please try again later.');
-      } else {
-        setError(err.message || 'Failed to send OTP');
-      }
+      setError(err.message || 'Failed to send OTP');
     } finally {
       setSendingOtp(false);
     }
   };
 
-  const handleVerifyOtp = async (phone) => {
+  const handleVerifyOtp = async () => {
     setVerifyingOtp(true);
     setError('');
     try {
-      if (simulatedPhoneVerification) {
-        if (phoneCode === simulatedOtp) {
-          toast.success('Phone number verified!');
-          return true;
-        } else {
-          setError('Invalid verification code');
-          return false;
-        }
-      } else {
-        const credential = PhoneAuthProvider.credential(phoneVerificationId, phoneCode);
-        await linkWithCredential(auth.currentUser, credential);
-        toast.success('Phone number verified!');
+      if (emailCode === simulatedOtp) {
+        toast.success('Email verified!');
         return true;
+      } else {
+        setError('Invalid verification code');
+        return false;
       }
     } catch (err) {
       setError(err.message || 'Invalid verification code');
@@ -239,7 +201,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
       const docSnap = await getDoc(doc(db, 'users', cred.user.uid));
       if (!docSnap.exists()) {
         await auth.signOut();
-        setError('Please complete phone verification first. Register again or contact support.');
+        setError('Please complete email verification first. Register again or contact support.');
         return;
       }
       navigate('/dashboard');
@@ -278,7 +240,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
       const cred = await createUserWithEmailAndPassword(auth, r.email, r.password);
       setCreatedUserId(cred.user.uid);
       setStep(3);
-      toast.success('Almost there! Verify your phone to activate your account.');
+      toast.success('Almost there! Verify your email to activate your account.');
     } catch (err) {
       const m = err.code === 'auth/email-already-in-use' ? 'An account with this email already exists'
         : err.code === 'auth/weak-password' ? 'Password must be at least 6 characters'
@@ -306,7 +268,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
         });
         setMethod('google-complete');
         setG({ mobile_number: '' });
-        setStep(1);
       } else {
         navigate('/dashboard');
       }
@@ -324,16 +285,16 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
     if (!g.mobile_number) {
       setError('Please provide your mobile number.'); return;
     }
-    setStep(2);
+    handleSendOtp(googleProfile.email, googleProfile.uid);
   };
 
-  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); setCreatedUserId(null); setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); };
+  const switchMode = (m) => { setMode(m); setMethod(null); setError(''); setStep(1); setGoogleProfile(null); setCreatedUserId(null); setEmailSent(false); setEmailCode(''); };
 
   const isBusy = loading || sendingOtp || verifyingOtp;
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 relative">
-      <div id="recaptcha-container" />
+
       <button onClick={toggleTheme} className="absolute top-4 right-4 z-20 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
         {isDark ? (
           <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
@@ -346,10 +307,10 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
           <div className="text-center mb-8">
             <Link to="/"><img src="/anteco.png" alt="ANTECO" className="h-14 mx-auto mb-4" /></Link>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {method === 'google-complete' ? 'Complete Your Profile' : step === 3 ? 'Verify Phone' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
+              {method === 'google-complete' ? 'Complete Your Profile' : step === 3 ? 'Verify Email' : mode === 'login' ? 'Welcome Back' : 'Join ANTECO'}
             </h1>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              {method === 'google-complete' ? (step === 1 ? 'Enter your mobile number' : 'Verify your phone number') : step === 3 ? 'One more step to get started' : mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
+              {method === 'google-complete' ? 'Enter your mobile number' : step === 3 ? 'One more step to get started' : mode === 'login' ? 'Sign in to manage your account' : 'Create your account to get started'}
             </p>
           </div>
 
@@ -368,19 +329,20 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
               </div>
             )}
 
-              {step === 3 && (
+              {step === 3 ? (
                 <>
                   <div className="flex items-center justify-center gap-2 mb-6">
                     {[1, 2, 3].map((s) => (
                       <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-primary-500' : 'w-1.5 bg-gray-200 dark:bg-gray-700'}`} />
                     ))}
                   </div>
-                  <PhoneVerifyView phone={r.mobile_number} userId={createdUserId}
-                    phoneSent={phoneSent} sendingOtp={sendingOtp}
-                    phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
-                    onSendOtp={() => handleSendOtp(r.mobile_number, createdUserId)}
+                  <EmailVerifyView email={r.email} userId={createdUserId}
+                    emailSent={emailSent} sendingOtp={sendingOtp}
+                    emailCode={emailCode} onCodeChange={(e) => setEmailCode(e.target.value)}
+                    onSendOtp={() => handleSendOtp(r.email, createdUserId)}
+                    generatedOtp={simulatedOtp}
                     onVerifyOtp={async () => {
-                      const ok = await handleVerifyOtp(r.mobile_number);
+                      const ok = await handleVerifyOtp();
                       if (ok) {
                         await setDoc(doc(db, 'users', createdUserId), {
                           uid: createdUserId,
@@ -390,8 +352,7 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                           email: r.email,
                           mobile_number: r.mobile_number,
                           phoneNumber: r.mobile_number,
-                          isEmailVerified: false,
-                          phoneVerified: true,
+                          isEmailVerified: true,
                           accountStatus: 'active',
                           is_verified: false,
                           createdAt: serverTimestamp(),
@@ -400,22 +361,22 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                         navigate('/dashboard');
                       } else {
                         try { await auth.currentUser?.delete(); } catch (_) {}
-                        setError('Phone verification failed. Please try registering again.');
+                        setError('Email verification failed. Please try registering again.');
                       }
                     }}
                     verifyingOtp={verifyingOtp}
-                    onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
+                    onResend={() => { setEmailSent(false); setEmailCode(''); }} />
                 </>
-              )
-            ) : method === 'google-complete' ? (
+              ) : method === 'google-complete' ? (
               <>
-                {step === 2 ? (
-                  <PhoneVerifyView phone={g.mobile_number} userId={googleProfile.uid}
-                    phoneSent={phoneSent} sendingOtp={sendingOtp}
-                    phoneCode={phoneCode} onCodeChange={(e) => setPhoneCode(e.target.value)}
-                    onSendOtp={() => handleSendOtp(g.mobile_number, googleProfile.uid)}
+                {emailSent ? (
+                  <EmailVerifyView email={googleProfile.email} userId={googleProfile.uid}
+                    emailSent={emailSent} sendingOtp={sendingOtp}
+                    emailCode={emailCode} onCodeChange={(e) => setEmailCode(e.target.value)}
+                    onSendOtp={() => handleSendOtp(googleProfile.email, googleProfile.uid)}
+                    generatedOtp={simulatedOtp}
                     onVerifyOtp={async () => {
-                      const ok = await handleVerifyOtp(g.mobile_number);
+                      const ok = await handleVerifyOtp();
                       if (ok) {
                         await setDoc(doc(db, 'users', googleProfile.uid), {
                           uid: googleProfile.uid,
@@ -426,7 +387,6 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                           mobile_number: g.mobile_number,
                           phoneNumber: g.mobile_number,
                           isEmailVerified: true,
-                          phoneVerified: true,
                           accountStatus: 'active',
                           is_verified: true,
                           createdAt: serverTimestamp(),
@@ -435,13 +395,13 @@ export default function Login({ isDark, toggleTheme, defaultMode }) {
                         navigate('/dashboard');
                       } else {
                         try { await auth.currentUser?.delete(); } catch (_) {}
-                        setError('Phone verification failed.');
+                        setError('Email verification failed.');
                       }
                     }}
                     verifyingOtp={verifyingOtp}
-                    onResend={() => { setPhoneSent(false); setPhoneCode(''); setPhoneVerificationId(''); }} />
+                    onResend={() => { setEmailSent(false); setEmailCode(''); }} />
                 ) : (
-                  <GoogleCompleteFormView step={step} googleProfile={googleProfile}
+                  <GoogleCompleteFormView googleProfile={googleProfile}
                     mobileNumber={g.mobile_number}
                     onMobileChange={(e) => setG(p => ({ ...p, mobile_number: e.target.value }))}
                     onContinue={handleGoogleComplete} loading={loading} />

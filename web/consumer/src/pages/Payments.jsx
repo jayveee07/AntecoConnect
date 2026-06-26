@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, CheckCircle, Clock, XCircle, ArrowUpRight } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { paymentService } from '../services';
 import toast from 'react-hot-toast';
 

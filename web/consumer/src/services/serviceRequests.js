@@ -35,6 +35,11 @@ export const serviceRequestService = {
   },
 
   cancelRequest: async (requestId) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    const snap = await getDoc(doc(db, 'serviceRequests', requestId));
+    if (!snap.exists()) throw new Error('Request not found');
+    if (snap.data().userId !== user.uid) throw new Error('Not authorized to cancel this request');
     await updateDoc(doc(db, 'serviceRequests', requestId), {
       status: 'cancelled',
       updatedAt: serverTimestamp(),

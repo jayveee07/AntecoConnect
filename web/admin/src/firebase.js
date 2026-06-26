@@ -17,10 +17,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let analytics = null;
+try { analytics = getAnalytics(app); } catch (e) { console.warn('Analytics not supported:', e); }
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const messaging = getMessaging(app);
+let messaging = null;
+try { messaging = getMessaging(app); } catch (e) { console.warn('FCM not supported:', e); }
 
 export { app, analytics, auth, db, storage, messaging, getToken };

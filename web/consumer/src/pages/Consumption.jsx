@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, TrendingUp, TrendingDown, Lightbulb, ArrowUpRight } from 'lucide-react';
+import { Zap, TrendingUp, TrendingDown, Lightbulb } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { consumptionService } from '../services';
 

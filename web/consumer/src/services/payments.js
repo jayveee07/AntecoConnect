@@ -1,5 +1,5 @@
 import { auth, db } from '../firebase';
-import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export const paymentService = {
   getPaymentHistory: async () => {

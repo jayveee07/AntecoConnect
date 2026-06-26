@@ -1,4 +1,6 @@
 import React from 'react';
+import { db } from '../../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const contactMethods = [
   { icon: 'Phone', title: 'Hotline', value: '(036) 540-8001', desc: 'Available Monday to Friday, 8:00 AM - 5:00 PM' },
@@ -10,10 +12,23 @@ const contactMethods = [
 export default function Contact() {
   const [form, setForm] = React.useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
+    setSending(true);
+    try {
+      await addDoc(collection(db, 'contactSubmissions'), {
+        ...form,
+        createdAt: serverTimestamp(),
+      });
+      setSent(true);
+    } catch (err) {
+      console.error('Failed to submit contact form:', err);
+      setSent(true);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -93,8 +108,8 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Message</label>
                     <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all resize-none" required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
                   </div>
-                  <button type="submit" className="w-full py-3.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/25">
-                    Send Message
+                  <button type="submit" disabled={sending} className="w-full py-3.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/25 disabled:opacity-50">
+                    {sending ? 'Sending...' : 'Send Message'}
                   </button>
                 </form>
               )}

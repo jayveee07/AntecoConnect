@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Clock, CheckCircle, Search, MapPin, Zap, Upload } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, Search, MapPin } from 'lucide-react';
 import { outageService } from '../services';
 import toast from 'react-hot-toast';
 

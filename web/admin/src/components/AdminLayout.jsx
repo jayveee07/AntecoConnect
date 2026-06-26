@@ -99,10 +99,12 @@ export default function AdminLayout({ onLogout }) {
               <LogOut className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 pl-3 border-l border-gray-700">
-              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-sm font-bold">AD</div>
+              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-sm font-bold">
+                {(() => { try { const u = JSON.parse(localStorage.getItem('user') || '{}'); return (u.name || u.email || 'AD')[0].toUpperCase(); } catch { return 'AD'; } })()}
+              </div>
               <div>
-                <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-gray-400">Super Administrator</p>
+                <p className="text-sm font-medium">{(() => { try { return JSON.parse(localStorage.getItem('user') || '{}').name || 'Admin User'; } catch { return 'Admin User'; } })()}</p>
+                <p className="text-xs text-gray-400">{(() => { try { return JSON.parse(localStorage.getItem('user') || '{}').role || 'Administrator'; } catch { return 'Administrator'; } })()}</p>
               </div>
             </div>
           </div>

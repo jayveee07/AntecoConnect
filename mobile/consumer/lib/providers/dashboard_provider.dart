@@ -90,9 +90,11 @@ class DashboardProvider extends ChangeNotifier {
   Future<void> loadPaymentMethods() async {
     try {
       final data = await _service.getPaymentMethods();
-      _paymentMethods = (data as List)
-          .map((e) => PaymentMethodModel.fromJson(e))
-          .toList();
+      final list = data['data'] ?? data;
+      _paymentMethods = (list is List
+          ? list
+          : data is List ? data : []
+      ).map((e) => PaymentMethodModel.fromJson(e)).toList();
       notifyListeners();
     } catch (_) {}
   }

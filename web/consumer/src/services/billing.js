@@ -1,5 +1,5 @@
 import { auth, db } from '../firebase';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export const billingService = {
   getCurrentBill: async () => {

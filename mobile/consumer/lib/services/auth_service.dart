@@ -32,13 +32,13 @@ class AuthService {
     return UserModel.fromJson(response);
   }
 
-  Future<void> sendOtp(String mobileNumber) async {
-    await _api.post('/otp/send', body: {'mobile_number': mobileNumber});
+  Future<void> sendEmailOtp(String email) async {
+    await _api.post('/otp/send-email', body: {'email': email});
   }
 
-  Future<void> verifyOtp(String mobileNumber, String otp) async {
-    await _api.post('/otp/verify', body: {
-      'mobile_number': mobileNumber,
+  Future<void> verifyEmailOtp(String email, String otp) async {
+    await _api.post('/otp/verify-email', body: {
+      'email': email,
       'otp_code': otp,
     });
   }

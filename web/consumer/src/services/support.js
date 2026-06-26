@@ -14,8 +14,12 @@ export const supportService = {
   },
 
   getTicket: async (ticketId) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
     const snap = await getDoc(doc(db, 'supportTickets', ticketId));
-    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    if (!snap.exists()) return null;
+    if (snap.data().userId !== user.uid) throw new Error('Not authorized to view this ticket');
+    return { id: snap.id, ...snap.data() };
   },
 
   createTicket: async (data) => {
@@ -40,6 +44,7 @@ export const supportService = {
     const ticketRef = doc(db, 'supportTickets', ticketId);
     const ticketSnap = await getDoc(ticketRef);
     if (!ticketSnap.exists()) throw new Error('Ticket not found');
+    if (ticketSnap.data().userId !== user.uid) throw new Error('Not authorized to message this ticket');
     const messages = ticketSnap.data().messages || [];
     messages.push({
       userId: user.uid,

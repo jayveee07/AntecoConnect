@@ -11,3 +11,4 @@ export { meterReadingService } from './meterReading';
 export { announcementService } from './announcements';
 export { reportService } from './reports';
 export { gisService } from './gis';
+export { settingsService } from './settings';

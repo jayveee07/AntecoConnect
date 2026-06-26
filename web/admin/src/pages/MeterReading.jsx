@@ -1,13 +1,31 @@
 import React from 'react';
 import { Search, MapPin, CheckCircle, XCircle, Camera } from 'lucide-react';
+import { meterReadingService } from '../services';
 
-const readings = [
+const defaultReadings = [
   { id: 1, meter: 'MTR-12345', name: 'Juan Dela Cruz', reading: 18450, prev: 18190, status: 'validated', date: 'June 15, 2024', reader: 'Jose Santos' },
   { id: 2, meter: 'MTR-12346', name: 'Maria Santos', reading: 9230, prev: 9020, status: 'pending', date: 'June 15, 2024', reader: 'Pedro Lim' },
   { id: 3, meter: 'MTR-12348', name: 'Ana Gonzales', reading: 15670, prev: 15300, status: 'rejected', date: 'June 14, 2024', reader: 'Jose Santos' },
 ];
 
 export default function MeterReading() {
+  const [readings, setReadings] = React.useState(defaultReadings);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await meterReadingService.getReadings();
+        if (res.data?.data) {
+          setReadings(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

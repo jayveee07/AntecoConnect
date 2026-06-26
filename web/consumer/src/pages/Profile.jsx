@@ -1,7 +1,7 @@
 import React from 'react';
-import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, ChevronRight, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Building2, Shield, Bell, LogOut, Pen, Check, X, Eye, EyeOff, Zap, Camera } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -84,6 +84,20 @@ export default function Profile({ onLogout }) {
       }
     };
     fetchAccounts();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchPrefs = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        const snap = await getDoc(doc(db, 'notificationPreferences', user.uid));
+        if (snap.exists()) {
+          setNotifPrefs((prev) => ({ ...prev, ...snap.data() }));
+        }
+      } catch {}
+    };
+    fetchPrefs();
   }, []);
 
   const user = profile || JSON.parse(localStorage.getItem('user') || '{}');
@@ -374,7 +388,17 @@ export default function Profile({ onLogout }) {
             </div>
           </div>
 
-          <button className="py-3 px-6 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">
+          <button onClick={async () => {
+            try {
+              const user = auth.currentUser;
+              if (user) {
+                await setDoc(doc(db, 'notificationPreferences', user.uid), notifPrefs, { merge: true });
+              }
+              toast.success('Preferences saved');
+            } catch {
+              toast.error('Failed to save preferences');
+            }
+          }} className="py-3 px-6 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all">
             Save Preferences
           </button>
         </div>

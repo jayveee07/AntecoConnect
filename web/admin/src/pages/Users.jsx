@@ -1,7 +1,8 @@
 import React from 'react';
 import { Search, Shield, MoreHorizontal } from 'lucide-react';
+import { userService } from '../services';
 
-const users = [
+const defaultUsers = [
   { id: 1, name: 'Admin User', email: 'admin@anteconect.com', role: 'Super Administrator', status: 'active', mfa: true },
   { id: 2, name: 'Maria Cruz', email: 'maria@anteconect.com', role: 'Billing Manager', status: 'active', mfa: true },
   { id: 3, name: 'Jose Santos', email: 'jose@anteconect.com', role: 'Field Technician', status: 'active', mfa: false },
@@ -10,6 +11,23 @@ const users = [
 ];
 
 export default function Users() {
+  const [users, setUsers] = React.useState(defaultUsers);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await userService.getAll();
+        if (res.data?.data) {
+          setUsers(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

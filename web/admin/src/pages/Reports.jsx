@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart3, FileText, Download, ChevronRight, TrendingUp, Users, Activity, DollarSign } from 'lucide-react';
+import { reportService } from '../services';
 
 const reportTypes = [
   { icon: DollarSign, label: 'Billing Report', desc: 'Complete billing summary for selected period', color: 'bg-blue-500' },
@@ -8,7 +9,7 @@ const reportTypes = [
   { icon: Activity, label: 'Operations Report', desc: 'Outage, work order, and service metrics', color: 'bg-orange-500' },
 ];
 
-const recentReports = [
+const defaultRecentReports = [
   { name: 'June 2024 Billing Summary', type: 'PDF', date: 'June 17, 2024', size: '2.4 MB' },
   { name: 'Q2 2024 Collection Analysis', type: 'Excel', date: 'June 15, 2024', size: '1.8 MB' },
   { name: 'Consumer Growth Report', type: 'PDF', date: 'June 10, 2024', size: '3.1 MB' },
@@ -16,6 +17,23 @@ const recentReports = [
 ];
 
 export default function Reports() {
+  const [recentReports, setRecentReports] = React.useState(defaultRecentReports);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await reportService.getHistory();
+        if (res.data?.data) {
+          setRecentReports(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

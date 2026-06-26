@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Receipt, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Download, Receipt, CheckCircle, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { billingService } from '../services';
 

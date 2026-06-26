@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'firebase_service.dart';
 
 void main() async {
@@ -42,6 +41,30 @@ class TechnicianHomeScreen extends StatefulWidget {
 
 class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
   int _currentIndex = 0;
+  final _service = FirebaseTechnicianService();
+  List<Map<String, dynamic>> _workOrders = [];
+  List<Map<String, dynamic>> _meterReadings = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final orders = await _service.getWorkOrders();
+      final readings = await _service.getMeterReadings();
+      setState(() {
+        _workOrders = orders;
+        _meterReadings = readings;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +78,10 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
       ),
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          _DashboardTab(),
-          _WorkOrdersTab(),
-          _MeterReadingTab(),
+        children: [
+          _DashboardTab(service: _service, workOrders: _workOrders, loading: _loading),
+          _WorkOrdersTab(orders: _workOrders, loading: _loading),
+          _MeterReadingTab(readings: _meterReadings, loading: _loading),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -79,55 +102,71 @@ class _TechnicianHomeScreenState extends State<TechnicianHomeScreen> {
 }
 
 class _DashboardTab extends StatelessWidget {
-  const _DashboardTab();
+  final FirebaseTechnicianService service;
+  final List<Map<String, dynamic>> workOrders;
+  final bool loading;
+
+  const _DashboardTab({required this.service, required this.workOrders, required this.loading});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: const Color(0xFFFF6B00),
-                child: const Text('JS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Good Morning,', style: TextStyle(color: Colors.grey, fontSize: 14)),
-                  const Text('Jose Santos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(child: _StatCard(icon: Icons.assignment, label: 'Assigned', value: '5', color: const Color(0xFFFF6B00))),
-              const SizedBox(width: 12),
-              Expanded(child: _StatCard(icon: Icons.pending, label: 'Pending', value: '2', color: Colors.orange)),
-              const SizedBox(width: 12),
-              Expanded(child: _StatCard(icon: Icons.check_circle, label: 'Done Today', value: '3', color: Colors.green)),
-            ],
-          ),
-          const SizedBox(height: 24),
-          const Text('Today\'s Schedule', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView(
+    final assigned = workOrders.where((o) => o['status'] == 'assigned' || o['status'] == 'in_progress').length;
+    final pending = workOrders.where((o) => o['status'] == 'pending').length;
+    final doneToday = workOrders.where((o) => o['status'] == 'completed').length;
+
+    return RefreshIndicator(
+      onRefresh: () async {},
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                _OrderCard(type: 'Meter Replacement', address: '123 Rizal St., San Roque', priority: 'High', status: 'In Progress'),
-                _OrderCard(type: 'Reconnection', address: '456 Mabini St., Barangay 1', priority: 'Normal', status: 'Assigned'),
-                _OrderCard(type: 'Service Inspection', address: '789 Luna St.', priority: 'Low', status: 'Pending'),
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: const Color(0xFFFF6B00),
+                  child: const Text('JS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Good Morning,', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                    const Text('Jose Santos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(child: _StatCard(icon: Icons.assignment, label: 'Assigned', value: loading ? '...' : '$assigned', color: const Color(0xFFFF6B00))),
+                const SizedBox(width: 12),
+                Expanded(child: _StatCard(icon: Icons.pending, label: 'Pending', value: loading ? '...' : '$pending', color: Colors.orange)),
+                const SizedBox(width: 12),
+                Expanded(child: _StatCard(icon: Icons.check_circle, label: 'Done Today', value: loading ? '...' : '$doneToday', color: Colors.green)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text('Today\'s Schedule', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Expanded(
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : workOrders.isEmpty
+                      ? const Center(child: Text('No work orders assigned', style: TextStyle(color: Colors.grey)))
+                      : ListView(
+                          children: workOrders.take(10).map((order) => _OrderCard(
+                            type: order['type'] ?? 'Work Order',
+                            address: order['address'] ?? '',
+                            priority: order['priority'] ?? 'Normal',
+                            status: order['status'] ?? 'Pending',
+                          )).toList(),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -171,6 +210,23 @@ class _OrderCard extends StatelessWidget {
 
   const _OrderCard({required this.type, required this.address, required this.priority, required this.status});
 
+  Color _priorityColor() {
+    switch (priority.toLowerCase()) {
+      case 'urgent':
+      case 'critical':
+        return Colors.red;
+      case 'high':
+        return Colors.red;
+      case 'normal':
+      case 'medium':
+        return const Color(0xFFFF6B00);
+      case 'low':
+        return Colors.grey;
+      default:
+        return const Color(0xFFFF6B00);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -205,10 +261,10 @@ class _OrderCard extends StatelessWidget {
                       margin: const EdgeInsets.only(top: 6),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: priority == 'High' ? Colors.red.withValues(alpha: 0.2) : const Color(0xFFFF6B00).withValues(alpha: 0.2),
+                        color: _priorityColor().withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(priority, style: TextStyle(fontSize: 11, color: priority == 'High' ? Colors.red : const Color(0xFFFF6B00), fontWeight: FontWeight.w600)),
+                      child: Text(priority, style: TextStyle(fontSize: 11, color: _priorityColor(), fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -233,28 +289,40 @@ class _OrderCard extends StatelessWidget {
 }
 
 class _WorkOrdersTab extends StatelessWidget {
-  const _WorkOrdersTab();
+  final List<Map<String, dynamic>> orders;
+  final bool loading;
+
+  const _WorkOrdersTab({required this.orders, required this.loading});
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: const [
-        _OrderCard(type: 'Meter Replacement', address: '123 Rizal St., San Roque', priority: 'High', status: 'In Progress'),
-        _OrderCard(type: 'Reconnection', address: '456 Mabini St., Barangay 1', priority: 'Normal', status: 'Assigned'),
-        _OrderCard(type: 'Service Inspection', address: '789 Luna St.', priority: 'Low', status: 'Pending'),
-        _OrderCard(type: 'Emergency Repair', address: '321 Rizal St., Poblacion', priority: 'Urgent', status: 'Assigned'),
-        _OrderCard(type: 'Meter Replacement', address: '654 Mabini St.', priority: 'Normal', status: 'Pending'),
-      ],
+      children: orders.map((order) => _OrderCard(
+        type: order['type'] ?? 'Work Order',
+        address: order['address'] ?? '',
+        priority: order['priority'] ?? 'Normal',
+        status: order['status'] ?? 'Pending',
+      )).toList(),
     );
   }
 }
 
 class _MeterReadingTab extends StatelessWidget {
-  const _MeterReadingTab();
+  final List<Map<String, dynamic>> readings;
+  final bool loading;
+
+  const _MeterReadingTab({required this.readings, required this.loading});
 
   @override
   Widget build(BuildContext context) {
+    final scheduled = readings.where((r) => r['status'] == 'pending' || r['status'] == 'scheduled').length;
+    final done = readings.where((r) => r['status'] == 'done' || r['status'] == 'submitted').length;
+    final remaining = scheduled;
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -272,7 +340,7 @@ class _MeterReadingTab extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Text('15', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6B00))),
+                      Text(loading ? '...' : '$scheduled', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFF6B00))),
                       const SizedBox(height: 4),
                       Text('Scheduled', style: TextStyle(color: Colors.grey.shade400)),
                     ],
@@ -290,7 +358,7 @@ class _MeterReadingTab extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Text('8', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
+                      Text(loading ? '...' : '$done', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
                       const SizedBox(height: 4),
                       Text('Done', style: TextStyle(color: Colors.grey.shade400)),
                     ],
@@ -308,7 +376,7 @@ class _MeterReadingTab extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Text('7', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orange)),
+                      Text(loading ? '...' : '$remaining', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orange)),
                       const SizedBox(height: 4),
                       Text('Remaining', style: TextStyle(color: Colors.grey.shade400)),
                     ],
@@ -321,13 +389,18 @@ class _MeterReadingTab extends StatelessWidget {
           const Text('Assigned Meters', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView(
-              children: [
-                _MeterCard(meter: 'MTR-12345', name: 'Juan Dela Cruz', address: '123 Rizal St.', status: 'pending'),
-                _MeterCard(meter: 'MTR-12346', name: 'Maria Santos', address: '456 Mabini St.', status: 'done'),
-                _MeterCard(meter: 'MTR-12347', name: 'Pedro Reyes', address: '789 Luna St.', status: 'pending'),
-              ],
-            ),
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : readings.isEmpty
+                    ? const Center(child: Text('No meters assigned', style: TextStyle(color: Colors.grey)))
+                    : ListView(
+                        children: readings.map((r) => _MeterCard(
+                          meter: r['meterNumber'] ?? r['meter'] ?? 'N/A',
+                          name: r['consumerName'] ?? r['name'] ?? 'Unknown',
+                          address: r['address'] ?? '',
+                          status: r['status'] == 'done' || r['status'] == 'submitted' ? 'done' : 'pending',
+                        )).toList(),
+                      ),
           ),
         ],
       ),

@@ -3,7 +3,8 @@ import '../../config/theme.dart';
 import '../../services/support_service.dart';
 
 class TicketDetailScreen extends StatefulWidget {
-  const TicketDetailScreen({super.key});
+  final int? ticketId;
+  const TicketDetailScreen({super.key, this.ticketId});
 
   @override
   State<TicketDetailScreen> createState() => _TicketDetailScreenState();
@@ -22,14 +23,21 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   }
 
   Future<void> _load() async {
-    // In a real app, get ticket ID from arguments
+    setState(() => _isLoading = true);
+    try {
+      final ticketId = widget.ticketId;
+      if (ticketId != null) {
+        _ticket = await _service.getTicketDetail(ticketId);
+      }
+    } catch (_) {}
     setState(() => _isLoading = false);
   }
 
   Future<void> _sendMessage() async {
     if (_messageCtl.text.trim().isEmpty) return;
+    final ticketId = widget.ticketId ?? 1;
     try {
-      await _service.sendMessage(1, _messageCtl.text.trim());
+      await _service.sendMessage(ticketId, _messageCtl.text.trim());
       _messageCtl.clear();
       _load();
     } catch (_) {}
@@ -43,8 +51,11 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ticket = _ticket;
+    final ticketTitle = ticket?['subject'] ?? 'Ticket #${widget.ticketId ?? '...'}';
+    final ticketStatus = ticket?['status'] ?? 'Open';
     return Scaffold(
-      appBar: AppBar(title: const Text('Ticket #TKT-...')),
+      appBar: AppBar(title: Text(ticketTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -59,25 +70,33 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Technical Issue', style: AntecoTheme.subtitle1),
+                              Text(ticket?['subject'] ?? 'Technical Issue', style: AntecoTheme.subtitle1),
                               const SizedBox(height: 8),
-                              Text('Having trouble with my meter reading...', style: AntecoTheme.body2),
+                              Text(ticket?['description'] ?? 'No description provided', style: AntecoTheme.body2),
                               const SizedBox(height: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AntecoTheme.warningOrange.withValues(alpha: 0.1),
+                                  color: ticketStatus == 'Open' ? AntecoTheme.warningOrange.withValues(alpha: 0.1) : AntecoTheme.successGreen.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Text('Open', style: TextStyle(color: AntecoTheme.warningOrange, fontSize: 12, fontWeight: FontWeight.w600)),
+                                child: Text(ticketStatus, style: TextStyle(
+                                  color: ticketStatus == 'Open' ? AntecoTheme.warningOrange : AntecoTheme.successGreen,
+                                  fontSize: 12, fontWeight: FontWeight.w600,
+                                )),
                               ),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildMessageBubble('Good day! How can we help you?', true),
-                      _buildMessageBubble('I noticed my bill is higher than usual this month.', false),
+                      ...ticket?['messages']?.map<Widget>((m) => _buildMessageBubble(
+                        m['message'] ?? '',
+                        m['isStaffReply'] == true,
+                      )) ?? [
+                        _buildMessageBubble('Good day! How can we help you?', true),
+                        _buildMessageBubble('I noticed my bill is higher than usual this month.', false),
+                      ],
                     ],
                   ),
                 ),

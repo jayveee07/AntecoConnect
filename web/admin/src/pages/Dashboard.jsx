@@ -166,7 +166,7 @@ export default function Dashboard() {
 }
 
 function KPICard({ icon: Icon, label, value, change, color }) {
-  const isPositive = change.startsWith('+');
+  const isPositive = change?.startsWith('+') ?? true;
   const colorMap = { blue: 'bg-blue-500', green: 'bg-green-500', red: 'bg-red-500', orange: 'bg-orange-500' };
   return (
     <div className="card flex items-center gap-4">

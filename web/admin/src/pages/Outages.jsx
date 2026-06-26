@@ -1,7 +1,8 @@
 import React from 'react';
 import { AlertTriangle, MapPin, Clock, CheckCircle, UserCheck } from 'lucide-react';
+import { adminOutageService } from '../services';
 
-const outages = [
+const defaultOutages = [
   { id: 1, type: 'Power Outage', barangay: 'San Roque', city: 'San Juan', status: 'in_progress', priority: 'high', team: 'Team Alpha', ticket: 'OTG-2024-001', time: '2 hours ago' },
   { id: 2, type: 'Low Voltage', barangay: 'Barangay 1', city: 'Malolos', status: 'verified', priority: 'medium', team: null, ticket: 'OTG-2024-002', time: '4 hours ago' },
   { id: 3, type: 'Transformer Issue', barangay: 'Bayanan', city: 'Mabini', status: 'reported', priority: 'critical', team: null, ticket: 'OTG-2024-003', time: '30 min ago' },
@@ -9,6 +10,23 @@ const outages = [
 ];
 
 export default function Outages() {
+  const [outages, setOutages] = React.useState(defaultOutages);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await adminOutageService.getAll();
+        if (res.data?.data) {
+          setOutages(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const statusColors = { reported: 'badge-warning', verified: 'badge-info', in_progress: 'badge-warning', resolved: 'badge-success', closed: 'badge-success' };
 
   return (

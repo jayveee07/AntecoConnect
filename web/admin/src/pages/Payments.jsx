@@ -1,13 +1,31 @@
 import React from 'react';
 import { Search, Download, CheckCircle, XCircle } from 'lucide-react';
+import { adminPaymentService } from '../services';
 
-const payments = [
+const defaultPayments = [
   { id: 1, ref: 'TXN-2024-0451', name: 'Juan Dela Cruz', method: 'GCash', amount: 2847.50, status: 'confirmed', date: 'June 17, 2024' },
   { id: 2, ref: 'TXN-2024-0450', name: 'Maria Santos', method: 'BPI Transfer', amount: 1980.00, status: 'confirmed', date: 'June 16, 2024' },
   { id: 3, ref: 'TXN-2024-0449', name: 'Pedro Reyes', method: 'Credit Card', amount: 1500.00, status: 'pending', date: 'June 16, 2024' },
 ];
 
 export default function Payments() {
+  const [payments, setPayments] = React.useState(defaultPayments);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await adminPaymentService.getAll();
+        if (res.data?.data) {
+          setPayments(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">

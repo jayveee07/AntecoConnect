@@ -1,7 +1,8 @@
 import React from 'react';
 import { Megaphone, Plus, Bell, Calendar, Clock } from 'lucide-react';
+import { announcementService } from '../services';
 
-const announcements = [
+const defaultAnnouncements = [
   { id: 1, title: 'Scheduled Power Maintenance - June 20', type: 'maintenance', priority: 'high', status: 'upcoming', date: 'June 18, 2024', areas: ['San Roque', 'Barangay 1'] },
   { id: 2, title: 'Billing Period Extended for May', type: 'billing', priority: 'medium', status: 'active', date: 'June 15, 2024', areas: ['All Areas'] },
   { id: 3, title: 'System Upgrade Notice', type: 'general', priority: 'low', status: 'active', date: 'June 10, 2024', areas: ['All Areas'] },
@@ -9,6 +10,23 @@ const announcements = [
 ];
 
 export default function Announcements() {
+  const [announcements, setAnnouncements] = React.useState(defaultAnnouncements);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await announcementService.getAll();
+        if (res.data?.data) {
+          setAnnouncements(res.data.data);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
