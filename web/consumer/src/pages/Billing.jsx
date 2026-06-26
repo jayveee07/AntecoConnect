@@ -2,6 +2,7 @@ import React from 'react';
 import { Download, Receipt, CheckCircle, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { billingService } from '../services';
+import RequireAccount from '../components/RequireAccount';
 
 export default function Billing() {
   const [currentBill, setCurrentBill] = React.useState(null);
@@ -33,6 +34,7 @@ export default function Billing() {
   }
 
   return (
+    <RequireAccount>
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
@@ -137,5 +139,6 @@ export default function Billing() {
         </div>
       )}
     </div>
+    </RequireAccount>
   );
 }

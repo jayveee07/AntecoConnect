@@ -2,6 +2,7 @@ import React from 'react';
 import { Wrench, Plus, X, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { serviceRequestService } from '../services';
 import toast from 'react-hot-toast';
+import RequireAccount from '../components/RequireAccount';
 
 const requestTypes = [
   { value: 'new_connection', label: 'New Connection', icon: 'Zap' },
@@ -76,6 +77,7 @@ export default function ServiceRequests() {
   }
 
   return (
+    <RequireAccount>
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
@@ -162,5 +164,6 @@ export default function ServiceRequests() {
         </div>
       )}
     </div>
+    </RequireAccount>
   );
 }

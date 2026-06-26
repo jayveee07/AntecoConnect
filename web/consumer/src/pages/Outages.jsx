@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertTriangle, Clock, CheckCircle, Search, MapPin } from 'lucide-react';
 import { outageService } from '../services';
 import toast from 'react-hot-toast';
+import RequireAccount from '../components/RequireAccount';
 
 const outageTypes = [
   { value: 'power_outage', label: 'No Power', icon: 'Zap' },
@@ -86,6 +87,7 @@ export default function Outages() {
   }
 
   return (
+    <RequireAccount>
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Outages</h1>
@@ -238,5 +240,6 @@ export default function Outages() {
         </div>
       )}
     </div>
+    </RequireAccount>
   );
 }

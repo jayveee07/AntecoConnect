@@ -2,6 +2,7 @@ import React from 'react';
 import { Zap, TrendingUp, TrendingDown, Lightbulb } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { consumptionService } from '../services';
+import RequireAccount from '../components/RequireAccount';
 
 const defaultMonthly = [
   { month: 'Jan', kwh: 180, cost: 1440 }, { month: 'Feb', kwh: 195, cost: 1560 },
@@ -56,6 +57,7 @@ export default function Consumption() {
   }
 
   return (
+    <RequireAccount>
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Energy Consumption</h1>
@@ -151,5 +153,6 @@ export default function Consumption() {
         </div>
       )}
     </div>
+    </RequireAccount>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { paymentService } from '../services';
 import toast from 'react-hot-toast';
+import RequireAccount from '../components/RequireAccount';
 
 export default function Payments() {
   const [payments, setPayments] = React.useState([]);
@@ -55,6 +56,7 @@ export default function Payments() {
   }
 
   return (
+    <RequireAccount>
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Payments</h1>
@@ -124,5 +126,6 @@ export default function Payments() {
         )}
       </div>
     </div>
+    </RequireAccount>
   );
 }
