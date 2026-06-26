@@ -137,15 +137,15 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
   const desktopRef = React.useRef(null);
+  const drawerRef = React.useRef(null);
 
   const { visible, overflow } = useNavSplit();
   const overflowPaths = overflow.map((i) => i.path);
 
   React.useEffect(() => {
     function handleClick(e) {
-      if (!desktopRef.current?.contains(e.target)) {
-        setMoreOpen(false);
-      }
+      if (desktopRef.current?.contains(e.target) || drawerRef.current?.contains(e.target)) return;
+      setMoreOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -267,7 +267,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMoreOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in">
+          <div ref={drawerRef} className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in">
             <div className="flex justify-end px-4 pt-4">
               <button onClick={() => setMoreOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                 <X className="w-5 h-5 text-gray-500" />
