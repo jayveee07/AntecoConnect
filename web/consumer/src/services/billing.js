@@ -3,34 +3,19 @@ import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from '
 
 export const billingService = {
   getCurrentBill: async (accountId) => {
-    const user = auth.currentUser;
-    if (!user) return null;
-    const conditions = [where('userId', '==', user.uid)];
-    if (accountId) conditions.push(where('consumerAccountId', '==', accountId));
-    const billsSnap = await getDocs(
-      query(collection(db, 'billingStatements'), ...conditions, orderBy('createdAt', 'desc'), limit(1))
-    );
-    if (!billsSnap.empty) return { id: billsSnap.docs[0].id, ...billsSnap.docs[0].data() };
     if (!accountId) return null;
-    const fallback = await getDocs(
-      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(1))
+    const billsSnap = await getDocs(
+      query(collection(db, 'billingStatements'), where('consumerAccountId', '==', accountId), orderBy('createdAt', 'desc'), limit(1))
     );
-    return fallback.empty ? null : { id: fallback.docs[0].id, ...fallback.docs[0].data() };
+    return billsSnap.empty ? null : { id: billsSnap.docs[0].id, ...billsSnap.docs[0].data() };
   },
 
   getBills: async (accountId) => {
-    const user = auth.currentUser;
-    if (!user) return [];
-    const conditions = [where('userId', '==', user.uid)];
-    if (accountId) conditions.push(where('consumerAccountId', '==', accountId));
+    if (!accountId) return [];
     const snap = await getDocs(
-      query(collection(db, 'billingStatements'), ...conditions, orderBy('billingPeriod', 'desc'))
+      query(collection(db, 'billingStatements'), where('consumerAccountId', '==', accountId), orderBy('billingPeriod', 'desc'))
     );
-    if (!snap.empty || !accountId) return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const fallback = await getDocs(
-      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('billingPeriod', 'desc'))
-    );
-    return fallback.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
   getBill: async (billId) => {

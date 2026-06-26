@@ -1,5 +1,5 @@
 import { auth, db } from '../firebase';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export const dashboardService = {
   getAll: async () => {
@@ -9,10 +9,19 @@ export const dashboardService = {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data() || {};
 
-    const billsSnap = await getDocs(
-      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(6))
-    );
-    const bills = billsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const linkSnap = await getDoc(doc(db, 'LinkAccounts', user.uid));
+    const accounts = linkSnap.exists() ? (linkSnap.data().accounts || []) : [];
+    const accountNumbers = accounts.map((a) => a.accountNumber).filter(Boolean);
+
+    let bills = [];
+    if (accountNumbers.length > 0) {
+      const snap = await getDocs(
+        query(collection(db, 'billingStatements'), where('consumerAccountId', 'in', accountNumbers))
+      );
+      bills = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b.createdAt?.toDate?.() || b.createdAt || 0) - new Date(a.createdAt?.toDate?.() || a.createdAt || 0))
+        .slice(0, 6);
+    }
 
     const currentBill = bills.find(b => b.status === 'unpaid' || b.status === 'pending') || bills[0] || null;
 
