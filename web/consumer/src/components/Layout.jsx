@@ -190,33 +190,35 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               ))}
 
               {/* Desktop More */}
-              <div
-                ref={desktopRef}
-                className="overflow-hidden transition-all duration-300 ease-in-out"
-                style={{
-                  width: overflow.length > 0 ? 85 : 0,
-                  opacity: overflow.length > 0 ? 1 : 0,
-                  pointerEvents: overflow.length > 0 ? 'auto' : 'none',
-                }}
-              >
-                <button
-                  onClick={() => setMoreOpen(!moreOpen)}
-                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                    isMoreActive(location.pathname) || moreOpen
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                  }`}
+              <div className="relative">
+                <div
+                  ref={desktopRef}
+                  className="overflow-hidden transition-all duration-300 ease-in-out"
+                  style={{
+                    width: overflow.length > 0 ? 85 : 0,
+                    opacity: overflow.length > 0 ? 1 : 0,
+                    pointerEvents: overflow.length > 0 ? 'auto' : 'none',
+                  }}
                 >
-                  <Grid3X3 className="w-4 h-4" />
-                  <span>More</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
-                  {(isMoreActive(location.pathname) || moreOpen) && (
-                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full transition-all duration-300" />
-                  )}
-                </button>
+                  <button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                      isMoreActive(location.pathname) || moreOpen
+                        ? 'text-primary-600 dark:text-primary-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                    <span>More</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-all duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                    {(isMoreActive(location.pathname) || moreOpen) && (
+                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full transition-all duration-300" />
+                    )}
+                  </button>
+                </div>
 
                 {moreOpen && (
-                  <div className="absolute top-full left-0 mt-2">
+                  <div className="absolute top-full right-0 mt-2 z-50">
                     <MoreDropdown
                       items={overflow}
                       isActive={(p) => location.pathname === p}
