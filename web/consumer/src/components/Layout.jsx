@@ -328,7 +328,13 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                         ))
                       )}
                     </div>
-
+                    <Link
+                      to="/notifications"
+                      onClick={() => setNotifOpen(false)}
+                      className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm text-primary-600 dark:text-primary-400 font-medium border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      View all notifications
+                    </Link>
                   </div>
                 )}
               </div>

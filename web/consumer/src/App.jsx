@@ -12,6 +12,7 @@ import Consumption from './pages/Consumption';
 import Outages from './pages/Outages';
 import ServiceRequests from './pages/ServiceRequests';
 import Support from './pages/Support';
+import NotificationsPage from './pages/Notifications';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -103,6 +104,7 @@ function App() {
             <Route path="/outages" element={<Outages />} />
             <Route path="/service-requests" element={<ServiceRequests />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
             <Route path="/more" element={<More />} />
             <Route path="/add-account" element={<AddAccount />} />
