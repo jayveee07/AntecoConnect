@@ -10,8 +10,12 @@ export const billingService = {
     const billsSnap = await getDocs(
       query(collection(db, 'billingStatements'), ...conditions, orderBy('createdAt', 'desc'), limit(1))
     );
-    if (billsSnap.empty) return null;
-    return { id: billsSnap.docs[0].id, ...billsSnap.docs[0].data() };
+    if (!billsSnap.empty) return { id: billsSnap.docs[0].id, ...billsSnap.docs[0].data() };
+    if (!accountId) return null;
+    const fallback = await getDocs(
+      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(1))
+    );
+    return fallback.empty ? null : { id: fallback.docs[0].id, ...fallback.docs[0].data() };
   },
 
   getBills: async (accountId) => {
@@ -22,7 +26,11 @@ export const billingService = {
     const snap = await getDocs(
       query(collection(db, 'billingStatements'), ...conditions, orderBy('billingPeriod', 'desc'))
     );
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!snap.empty || !accountId) return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const fallback = await getDocs(
+      query(collection(db, 'billingStatements'), where('userId', '==', user.uid), orderBy('billingPeriod', 'desc'))
+    );
+    return fallback.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
   getBill: async (billId) => {
