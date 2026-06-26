@@ -52,15 +52,14 @@ function MoreDropdown({ items, isActive, onClose }) {
   );
 }
 
-function useNavSplit(navRef) {
+function useNavSplit() {
   const [splitIdx, setSplitIdx] = React.useState(allItems.length);
 
   React.useEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
-
     const measure = () => {
-      const avail = el.clientWidth;
+      const ww = window.innerWidth;
+      const base = 120 + 140 + 48 + 32;
+      const avail = Math.max(0, ww - base);
       let used = 0;
       let idx = 0;
       for (; idx < allItems.length; idx++) {
@@ -72,11 +71,18 @@ function useNavSplit(navRef) {
       setSplitIdx(idx);
     };
 
+    let ticking = false;
+    const onResize = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => { ticking = false; measure(); });
+      }
+    };
+
     measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [navRef]);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const visible = allItems.slice(0, splitIdx);
   const overflow = allItems.slice(splitIdx);
@@ -88,11 +94,10 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
   const [showLogout, setShowLogout] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
-  const navRef = React.useRef(null);
   const desktopRef = React.useRef(null);
   const mobileRef = React.useRef(null);
 
-  const { visible, overflow } = useNavSplit(navRef);
+  const { visible, overflow } = useNavSplit();
   const overflowPaths = overflow.map((i) => i.path);
 
   React.useEffect(() => {
@@ -134,7 +139,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
             </Link>
 
             {/* Desktop nav */}
-            <nav ref={navRef} className="hidden md:flex items-center">
+            <nav className="hidden md:flex items-center">
               <div className="flex items-center overflow-hidden">
                 {allItems.map((item) => {
                   const inVisible = visible.some((v) => v.path === item.path);
