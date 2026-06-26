@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Receipt, CreditCard, Grid3X3, User,
   Zap, AlertTriangle, ClipboardList, HeadphonesIcon,
@@ -132,20 +132,18 @@ function NavLink({ item, inVisible, isActive }) {
 
 export default function Layout({ isDark, toggleTheme, onLogout }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showLogout, setShowLogout] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
   const [moreOpen, setMoreOpen] = React.useState(false);
   const desktopRef = React.useRef(null);
-  const mobileRef = React.useRef(null);
 
   const { visible, overflow } = useNavSplit();
   const overflowPaths = overflow.map((i) => i.path);
 
   React.useEffect(() => {
     function handleClick(e) {
-      const inDesktop = desktopRef.current?.contains(e.target);
-      const inMobile = mobileRef.current?.contains(e.target);
-      if (!inDesktop && !inMobile) {
+      if (!desktopRef.current?.contains(e.target)) {
         setMoreOpen(false);
       }
     }
@@ -269,9 +267,9 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-2xl animate-slide-in">
             <div className="flex justify-end px-4 pt-4">
-              <button onClick={() => setMoreOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
+              <button onClick={(e) => { e.stopPropagation(); setMoreOpen(false); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -284,11 +282,10 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
               {allItems.map((item) => {
                 const active = location.pathname === item.path;
                 return (
-                  <Link
+                  <button
                     key={item.path}
-                    to={item.path}
-                    onClick={() => setMoreOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-all ${
+                    onClick={() => { setMoreOpen(false); navigate(item.path); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all text-left ${
                       active
                         ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950 font-medium border-r-2 border-primary-500'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -296,7 +293,7 @@ export default function Layout({ isDark, toggleTheme, onLogout }) {
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.label}</span>
-                  </Link>
+                  </button>
                 );
               })}
             </nav>
