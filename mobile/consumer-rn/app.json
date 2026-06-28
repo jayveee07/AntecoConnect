@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "ANTECO Connect",
+    "slug": "anteconect-consumer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#FF6B00"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anteco.consumer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FF6B00"
+      },
+      "package": "com.anteco.consumer"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
