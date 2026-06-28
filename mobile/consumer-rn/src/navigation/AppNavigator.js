@@ -13,6 +13,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddAccountScreen from '../screens/AddAccountScreen';
+import PaymentsScreen from '../screens/PaymentsScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -73,6 +74,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Main" component={DrawerNavigator} />
       <Stack.Screen name="BillDetail" component={BillDetailScreen} options={{ headerShown: true, title: 'Bill Details', headerStyle: { backgroundColor: '#FF6B00' }, headerTintColor: '#FFF', headerTitleStyle: { fontWeight: '700' } }} />
       <Stack.Screen name="AddAccount" component={AddAccountScreen} options={{ headerShown: true, title: 'Link Account', headerStyle: { backgroundColor: '#FF6B00' }, headerTintColor: '#FFF' }} />
+      <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: true, title: 'Payments', headerStyle: { backgroundColor: '#FF6B00' }, headerTintColor: '#FFF' }} />
     </Stack.Navigator>
   );
 }
